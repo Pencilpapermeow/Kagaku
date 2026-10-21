@@ -1,0 +1,12 @@
+node_modules
+dist
+dev-dist
+coverage
+test-results
+playwright-report
+*.tsbuildinfo
+.DS_Store
+# raw study material never lives in this public repo
+/inbox
+/work
+*.kagaku
