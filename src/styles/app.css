@@ -2145,6 +2145,7 @@ button.card {
   align-items: center;
   gap: 10px;
   margin: 4px 0 10px;
+  white-space: nowrap;
 }
 .review-card {
   display: grid !important;

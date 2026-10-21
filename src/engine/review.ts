@@ -18,10 +18,11 @@ export async function reviewQueue(filter: ReviewFilter): Promise<ReviewItem[]> {
   const [questions, remember, packs] = await Promise.all([db.questions.toArray(), db.remember.toArray(), db.packs.toArray()])
   const metas = new Map((await db.qmeta.toArray()).map((m) => [m.qid, m]))
   const packOrder = new Map(packs.sort((a, b) => a.importedAt - b.importedAt).map((p, i) => [p.id, i]))
+  // His own mistake photos were checked when he added them; the demo pack is only a demo.
+  const skip = (packId: string) => packId === 'user' || packId === 'demo'
   const items: ReviewItem[] = [
-    ...remember.map((r): ReviewItem => ({ kind: 'remember', r, meta: metas.get(r.id) })),
-    // His own mistake photos were checked when he added them.
-    ...questions.filter((q) => q.packId !== 'user').map((q): ReviewItem => ({ kind: 'question', q, meta: metas.get(q.id) })),
+    ...remember.filter((r) => !skip(r.packId)).map((r): ReviewItem => ({ kind: 'remember', r, meta: metas.get(r.id) })),
+    ...questions.filter((q) => !skip(q.packId)).map((q): ReviewItem => ({ kind: 'question', q, meta: metas.get(q.id) })),
   ].filter((i) => !i.meta?.reviewedAt)
   const key = (i: ReviewItem) => (i.kind === 'question' ? i.q : i.r)
   items.sort((a, b) => (packOrder.get(key(a).packId) ?? 0) - (packOrder.get(key(b).packId) ?? 0) || key(a).chapter.localeCompare(key(b).chapter))
