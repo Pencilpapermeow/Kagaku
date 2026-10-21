@@ -15,8 +15,6 @@ export interface Settings {
   graduateAfter: number
   /** Chance that practice swaps the correct option for "None of these". */
   noneOfTheseRate: number
-  /** Hide printed options in photo questions until "show options" is tapped. */
-  thinkFirst: boolean
   practiceSize: number
   lastBackupAt: number
   installedAt: number
@@ -33,7 +31,6 @@ export const DEFAULT_SETTINGS: Settings = {
   geminiModel: 'gemini-2.5-flash',
   graduateAfter: 3,
   noneOfTheseRate: 0.12,
-  thinkFirst: true,
   practiceSize: 20,
   lastBackupAt: 0,
   installedAt: 0,

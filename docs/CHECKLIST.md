@@ -10,7 +10,7 @@ Features need a paid, capable AI; content can keep coming after 10 Nov through t
 - [x] Home: daily goal, streak, JA countdown (editable date), subject progress, backup reminder
 - [x] Subject → Units/Class filters → chapters with progress
 - [x] Chapter: To Remember (formulas, notes, tables, trends, self-test hide), Practice, Galti, Notes
-- [x] Practice: all 8 formats, shuffle, distractor pool, "None of these" both ways, think-first for photo questions, combo streak, reasons for mistakes
+- [x] Practice: all 8 formats, shuffle, distractor pool, "None of these" both ways, combo streak, reasons for mistakes
 - [x] Questions generated from tables and trends (forward, reverse, true/false, match, ordering, highest/lowest)
 - [x] Galti Notebook: auto-add, manual photo add with rotate/brighten, reasons, graduation (2–4 in a row), mistake patterns, mistakes practice/test
 - [x] CBT in NTA layout: instructions, sections, palette states, Save & Next / Mark for Review / Clear, timer, submit, analysis (score, accuracy, time per question, section and chapter breakdown)
@@ -20,7 +20,8 @@ Features need a paid, capable AI; content can keep coming after 10 Nov through t
 - [x] Backup download / restore, storage use, "protect my data" (persist)
 - [x] Tools: PDF question cropper, photo cleaner, pack builder, content-repo check
 - [x] Unit tests + browser tests at phone and iPad sizes; CI deploys only when all pass
-- [x] Uttam's 97-chapter list in the registry (his order and names)
+- [x] Uttam's chapter list in the registry with his numbers 1–95
+- [x] Mixed form only (text + LaTeX + diagram crops); photo-form questions are refused; tools extract diagrams separately
 
 ## Waiting on Uttam
 
@@ -29,13 +30,14 @@ Features need a paid, capable AI; content can keep coming after 10 Nov through t
 - [ ] Create the private `kagaku-content` repo, then the read-only token (Claude will guide)
 - [ ] Priority order for materials (suggested: To Remember/ratta → JA PYQs → AITS → handwritten)
 - [ ] Confirm the 2 AM IST nightly bug-hunt time
+- [ ] Number for "Dual nature of radiation and matter"
+- [ ] Experiments (JA "General" physics): own chapter or inside Units and Measurement?
 
 ## Still to build
 
 - [ ] MathLive keyboard for editing formulas/answers in the app (no LaTeX typing)
 - [ ] Stylus drawing pad on iPad → AI converts to LaTeX
-- [ ] In-app PDF import with pdf.js (auto-crop by "Q.1" positions) and manual box cropping for scans
-- [ ] In-app review screen: original crop vs rendered text, tick to verify
+- [ ] In-app diagram cropping for his own photos (manual box) if needed
 - [ ] Automated rule checks: dimensions, periodic data (NCERT), oxidation-state sum, trend order
 - [ ] Parametric questions with changing numbers; reverse-format switching for stored questions
 - [ ] Mistake patterns by topic (e.g. "sign convention") once topics are tagged

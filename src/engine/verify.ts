@@ -5,7 +5,7 @@ import type { Question } from '../content/schema'
 import { db } from '../db/db'
 import { plainText } from '../ui/rich'
 import { describeAnswer, type Response } from './marking'
-import { labelAt } from './variants'
+import { isLettersOnly, labelAt } from './variants'
 
 export function responseToAnswer(q: Question, r: Response): Question['answer'] | undefined {
   switch (q.format) {
@@ -37,7 +37,7 @@ export function questionText(q: Question): string {
   const lines: string[] = []
   if (q.stem) lines.push(plainText(q.stem))
   if (q.format === 'assertion') lines.push(`Assertion: ${plainText(q.assertion)}`, `Reason: ${plainText(q.reason)}`)
-  if ((q.format === 'single' || q.format === 'multiple') && !q.optionsInImage)
+  if ((q.format === 'single' || q.format === 'multiple') && !isLettersOnly(q))
     q.options.forEach((o, i) => lines.push(`(${labelAt(i)}) ${plainText(o.text) || '[figure]'}`))
   if (q.format === 'match') {
     lines.push('Column I:', ...q.left.map((l) => `${l.id}. ${plainText(l.text)}`))
@@ -49,7 +49,7 @@ export function questionText(q: Question): string {
 
 /** Options are shown re-lettered in practice; translate ids back to on-screen letters. */
 function shownAnswer(q: Question, text: string): string {
-  if ((q.format === 'single' || q.format === 'multiple') && !q.optionsInImage) {
+  if ((q.format === 'single' || q.format === 'multiple') && !isLettersOnly(q)) {
     const ids = text.split(', ')
     return ids.map((id) => labelAt(q.options.findIndex((o) => o.id === id))).join(', ')
   }

@@ -18,6 +18,8 @@ export interface Chapter {
   unit: string
   cls: ClassLevel
   name: string
+  /** His own chapter number (1–95). */
+  no?: number
   aliases?: string[]
   topics?: string[]
 }
@@ -62,10 +64,11 @@ export const SUBJECTS: Subject[] = [
   },
 ]
 
-type Row = [slug: string, unit: string, cls: ClassLevel, name: string]
+type Row = [slug: string, unit: string, cls: ClassLevel, name: string, opts?: { unnumbered: true }]
 
-// Uttam's own list (21 Oct 2026), in his order. His row 28 "Dual nature of radiation and
-// matter / Atom / Nuclei" is three chapters here, which makes his count of 97.
+// Uttam's own list, in his order and numbering: Physics 1–30, Chemistry 31–65,
+// Maths 66–95. "Dual nature of radiation and matter" has no number in his register
+// (it sits between 27 Wave Optics and 28 Atom/Nuclei) — waiting for him to confirm.
 const PHY: Row[] = [
   ['math-tools', 'misc', 11, 'Mathematical Tools'],
   ['motion-1d', 'mech1', 11, 'Motion in a Straight Line'],
@@ -94,9 +97,8 @@ const PHY: Row[] = [
   ['em-waves', 'em', 12, 'Electromagnetic Waves'],
   ['ray-optics', 'optics', 12, 'Ray Optics and Optical Instruments'],
   ['wave-optics', 'optics', 12, 'Wave Optics'],
-  ['dual-nature', 'modern', 12, 'Dual Nature of Radiation and Matter'],
-  ['atoms', 'modern', 12, 'Atoms'],
-  ['nuclei', 'modern', 12, 'Nuclei'],
+  ['dual-nature', 'modern', 12, 'Dual Nature of Radiation and Matter', { unnumbered: true }],
+  ['atoms-nuclei', 'modern', 12, 'Atoms and Nuclei'],
   ['semiconductors', 'modern', 12, 'Semiconductor Electronics'],
   ['units-measurements', 'misc', 11, 'Units and Measurement'],
 ]
@@ -172,8 +174,16 @@ const MATH: Row[] = [
   ['number-theory', 'algebra', 11, 'Number Theory (basic)'],
 ]
 
+let counter = 0
 function build(subject: SubjectId, rows: Row[]): Chapter[] {
-  return rows.map(([slug, unit, cls, name]) => ({ id: `${subject}.${slug}`, subject, unit, cls, name }))
+  return rows.map(([slug, unit, cls, name, opts]) => ({
+    id: `${subject}.${slug}`,
+    subject,
+    unit,
+    cls,
+    name,
+    no: opts?.unnumbered ? undefined : ++counter,
+  }))
 }
 
 export const BASE_CHAPTERS: Chapter[] = [...build('phy', PHY), ...build('chem', CHEM), ...build('math', MATH)]

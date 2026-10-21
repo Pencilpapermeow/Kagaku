@@ -769,33 +769,6 @@ button.card {
   color: var(--accent);
   margin-bottom: 4px;
 }
-.split-img {
-  position: relative;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #fff;
-}
-.split-img img {
-  display: block;
-  width: 100%;
-}
-.split-cover {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  color: var(--text);
-  font-weight: 700;
-  background: color-mix(in srgb, var(--surface) 70%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  cursor: pointer;
-}
 .stem-text {
   font-size: 1.05rem;
   margin-bottom: 12px;
@@ -2155,6 +2128,55 @@ button.card {
 .result {
   margin-bottom: 8px;
   padding: 12px 14px;
+}
+
+/* review */
+.review-link {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.review-link > div:nth-child(2) {
+  flex: 1;
+}
+.review-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 10px;
+}
+.review-card {
+  display: grid !important;
+  gap: 10px;
+}
+.uncertain {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  background: var(--warn-soft);
+  color: var(--warn);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+}
+.uncertain svg {
+  flex: none;
+  margin-top: 2px;
+}
+.review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 16px;
+}
+.review-actions .btn-lg {
+  flex: 1 1 100%;
+}
+@media (min-width: 640px) {
+  .review-actions .btn-lg {
+    flex: 0 1 auto;
+  }
 }
 
 /* ============ animation ============ */

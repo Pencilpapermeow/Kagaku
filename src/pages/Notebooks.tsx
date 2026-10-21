@@ -356,8 +356,8 @@ function AddMistakeSheet({ open, onClose, defaultChapter }: { open: boolean; onC
       kind === 'number'
         ? { ...base, format: Number.isInteger(Number(num)) ? 'integer' : 'numerical', answer: Number(num) }
         : kind === 'single'
-          ? { ...base, format: 'single', options: opts, optionsInImage: true, answer: letters[0] }
-          : { ...base, format: 'multiple', options: opts, optionsInImage: true, answer: letters }
+          ? { ...base, format: 'single', options: opts, answer: letters[0] }
+          : { ...base, format: 'multiple', options: opts, answer: letters }
     await db.questions.put(q)
     const now = Date.now()
     await db.galti.put({ qid: id, chapter, addedAt: now, lastAt: now, origin: 'manual', reason, streak: 0, wrongCount: 1, status: 'active', note: note.trim() || undefined })

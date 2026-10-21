@@ -13,6 +13,7 @@ import { NotebooksPage } from './pages/Notebooks'
 import { UpdatePage } from './pages/Update'
 import { SettingsPage } from './pages/Settings'
 import { SearchPage } from './pages/Search'
+import { ReviewPage } from './pages/Review'
 import { useSettings } from './db/settings'
 
 function ThemeSync() {
@@ -68,6 +69,7 @@ export function App() {
           <Route path="/test/:id/result" element={<ResultPage />} />
           <Route path="/notebooks" element={<NotebooksPage />} />
           <Route path="/update" element={<UpdatePage />} />
+          <Route path="/review" element={<ReviewPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />

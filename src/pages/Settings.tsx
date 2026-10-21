@@ -75,10 +75,6 @@ export function SettingsPage() {
             <input type="range" min={0} max={0.4} step={0.02} value={s.noneOfTheseRate} onChange={(e) => setSetting('noneOfTheseRate', Number(e.target.value))} />
           </Field>
         </div>
-        <label className="switch-row">
-          <input type="checkbox" checked={s.thinkFirst} onChange={(e) => setSetting('thinkFirst', e.target.checked)} />
-          <span>"Think first": hide printed options in photo questions until I tap</span>
-        </label>
       </section>
 
       <section className="card" id="backup">

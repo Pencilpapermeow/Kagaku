@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { AlertTriangle, ClipboardCopy, ClipboardPaste, CloudDownload, FileUp, HardDrive, PackageCheck, Sparkles, Trash2 } from 'lucide-react'
+import { AlertTriangle, ChevronRight, ClipboardCheck, ClipboardCopy, ClipboardPaste, CloudDownload, FileUp, HardDrive, PackageCheck, Sparkles, Trash2 } from 'lucide-react'
 import { db } from '../db/db'
 import { useSettings } from '../db/settings'
 import { useChapters } from '../db/queries'
@@ -9,12 +9,14 @@ import { allChapters, commitPack, preparePack, readPackSource, removePack, type 
 import { compareWithInstalled, downloadPack, fetchIndex, type RemoteStatus } from '../content/sync'
 import { packPrompt } from '../content/prompt'
 import { DEMO_PACK } from '../content/demo'
+import { reviewCounts } from '../engine/review'
 import { Button, Empty, Sheet, TopBar, formatBytes, toast } from '../ui/kit'
 
 export function UpdatePage() {
   const settings = useSettings()
   const chapters = useChapters()
   const packs = useLiveQuery(() => db.packs.orderBy('importedAt').reverse().toArray(), [])
+  const review = useLiveQuery(reviewCounts, [], { all: 0, care: 0 })
   const [paste, setPaste] = useState('')
   const [preview, setPreview] = useState<PackPreview>()
   const [via, setVia] = useState<'file' | 'paste'>('paste')
@@ -74,6 +76,21 @@ export function UpdatePage() {
   return (
     <div>
       <TopBar title="Update Center" sub="Add content packs" />
+
+      {review.all > 0 && (
+        <Link to="/review" className="card review-link">
+          <div className="tile tone-accent">
+            <ClipboardCheck size={22} />
+          </div>
+          <div>
+            <b>Review new content</b>
+            <p className="muted small">
+              {review.all} waiting for your tick{review.care ? ` · ${review.care} need special care` : ''}
+            </p>
+          </div>
+          <ChevronRight className="muted" />
+        </Link>
+      )}
 
       <section className="card">
         <h2 className="card-title">

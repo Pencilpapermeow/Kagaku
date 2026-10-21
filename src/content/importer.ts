@@ -168,11 +168,9 @@ function checkQuestion(q: Question, path: string, issues: Issue[]) {
       const opts = ids(q.options)
       const answers = q.format === 'single' ? [q.answer] : q.answer
       for (const a of answers) if (!opts.has(a)) err(`answer "${a}" is not one of the option ids`)
-      if (!q.optionsInImage)
-        q.options.forEach((o, i) => {
-          if (!o.text && !o.image) err(`option ${i + 1} needs text or an image (or set optionsInImage)`)
-        })
-      if (q.optionsInImage && !q.image) err('optionsInImage needs a question image')
+      q.options.forEach((o, i) => {
+        if (!o.text && !o.image) err(`option ${i + 1} needs its text (or a diagram image for a figure option)`)
+      })
       break
     }
     case 'match': {
@@ -194,7 +192,8 @@ function checkQuestion(q: Question, path: string, issues: Issue[]) {
     default:
       break
   }
-  if (!q.stem.trim() && !q.image && q.format !== 'assertion') err('question needs stem text or an image')
+  // Mixed form only: the question is always text; an image may only add its diagram.
+  if (!q.stem.trim() && q.format !== 'assertion') err('question text is missing — write the question as text + LaTeX (images are only for diagrams)')
 }
 
 function checkRemember(r: Remember, path: string, issues: Issue[]) {

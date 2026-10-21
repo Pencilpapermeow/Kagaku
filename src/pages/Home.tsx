@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Atom, CalendarClock, ChevronRight, ClipboardPlus, Download, Flame, FlaskConical, NotebookPen, Sigma, Target } from 'lucide-react'
+import { Atom, CalendarClock, ChevronRight, ClipboardPlus, Download, Flame, FlaskConical, NotebookPen, ShieldCheck, Sigma, Target } from 'lucide-react'
 import { SUBJECTS, type SubjectId } from '../content/syllabus'
 import { subjectTotals, useChapterStats, useChapters, useContentCounts, useToday } from '../db/queries'
 import { useSettings } from '../db/settings'
@@ -7,6 +7,7 @@ import { Bar, Button, Ring } from '../ui/kit'
 import { Logo } from '../ui/Logo'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
+import { reviewCounts } from '../engine/review'
 
 export const SUBJECT_ICON: Record<SubjectId, typeof Atom> = { phy: Atom, chem: FlaskConical, math: Sigma }
 export const SUBJECT_COLOR: Record<SubjectId, string> = { phy: 'var(--phy)', chem: 'var(--chem)', math: 'var(--math)' }
@@ -31,6 +32,7 @@ export function HomePage() {
   const stats = useChapterStats()
   const counts = useContentCounts()
   const galtiActive = useLiveQuery(() => db.galti.where('status').equals('active').count(), [], 0)
+  const review = useLiveQuery(reviewCounts, [], { all: 0, care: 0 })
   const nav = useNavigate()
   const days = daysUntil(settings.examDate)
   const backupDue = counts.questions > 0 && Date.now() - (settings.lastBackupAt || settings.installedAt || Date.now()) > 7 * 864e5
@@ -56,6 +58,14 @@ export function HomePage() {
         <Link to="/settings#backup" className="banner banner-warn">
           <NotebookPen size={18} />
           <span>It's been a week since your last backup. Progress lives only on this device — back it up.</span>
+          <ChevronRight size={18} />
+        </Link>
+      )}
+
+      {review.care > 0 && (
+        <Link to="/review" className="banner banner-accent">
+          <ShieldCheck size={18} />
+          <span>{review.care} new item(s) need your check before you trust them.</span>
           <ChevronRight size={18} />
         </Link>
       )}

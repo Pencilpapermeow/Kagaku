@@ -1,6 +1,6 @@
 # Kagaku content pack format (version 1)
 
-Everything Kagaku shows comes from **packs**. A pack is one JSON object (pasted, or a `.json` file) or a `.kagaku` file (a zip holding `pack.json` plus `img/…` images). The app validates every pack before storing it, and shows problems instead of guessing.
+Everything Kagaku shows comes from **packs**. Questions are stored in **mixed form only**: the question and its options as text + LaTeX, plus a small crop of the diagram when there is one. A photo of a whole question or page is never stored (Uttam's decision, 21 Oct 2026); the importer refuses a question that has no text. A pack is one JSON object (pasted, or a `.json` file) or a `.kagaku` file (a zip holding `pack.json` plus its diagram images). The app validates every pack before storing it, and shows problems instead of guessing.
 
 The exact rules are the zod schema in `src/content/schema.ts`; `docs/pack.schema.json` is the same thing as JSON Schema (regenerate with `npm run schema`). The prompt that teaches any AI this format is `src/content/prompt.ts` (Update Center → "Copy prompt for any AI"); it also lists every chapter id.
 
@@ -29,19 +29,20 @@ The exact rules are the zod schema in `src/content/schema.ts`; `docs/pack.schema
 
 Plain text with `$inline$` and `$$display$$` LaTeX (KaTeX), `\ce{…}` for chemistry (mhchem, also works without `$`), `**bold**`, `*italic*`, and line breaks. Write `\$` for a literal dollar sign.
 
-## Images
+## Images (diagrams only)
 
-- Inside a `.kagaku` zip: `"image": "img/q12.webp"`.
-- In plain JSON: a `data:` URI.
-- Grayscale WebP around 1000–1400 px wide is the target (≈15–40 KB per printed question). Tools in `tools/process/` make these.
+- `image` on a question, option, passage or note is **a diagram**, never the question itself.
+- Inside a `.kagaku` zip: `"image": "fig/q12-1.webp"`. In plain JSON: a `data:` URI.
+- Tight crop, WebP, at most ~900 px wide (usually 3–20 KB). `tools/process/` makes these.
+- A graph or figure *as an option* goes in that option's `image`; options still shuffle.
 
 ## Questions
 
-Common fields: `chapter` (required), `id` (optional; derived from content if missing), `topic`, `stem`, `image`, `imageSplit`, `passage`, `solution` (2–3 lines), `solutionImage`, `source` (`exam`, `year`, `paper`, `qno`, `label`), `verified` (`official` | `checked` | `unverified`, default `unverified`), `tags`, `difficulty` (1–3).
+Common fields: `chapter` (required), `stem` (required: the full question text), `id` (optional; derived from content if missing), `topic`, `image` (diagram), `passage`, `solution` (2–3 lines), `solutionImage`, `source` (`exam`, `year`, `paper`, `qno`, `label`), `verified` (`official` | `checked` | `unverified`, default `unverified`), `uncertain` (what the transcriber wasn't sure of — shown on the review screen), `tags`, `difficulty` (1–3).
 
 | format | extra fields | `answer` |
 |---|---|---|
-| `single` | `options: [{id, text?, image?}]`, `distractors?`, `optionsInImage?` | `"B"` |
+| `single` | `options: [{id, text?, image?}]` (each needs text or a diagram), `distractors?` | `"B"` |
 | `multiple` | same | `["A","C"]` |
 | `integer` | — | `3` |
 | `numerical` | `tolerance?` (default 0.01) | `2.25` |
@@ -50,17 +51,17 @@ Common fields: `chapter` (required), `id` (optional; derived from content if mis
 | `match` | `left: [{id,text}]`, `right: [{id,text}]` | `{"P":"2","Q":["1","3"]}` |
 | `ordering` | `items: [{id,text}]` | `["c","a","b"]` (first to last as the stem asks) |
 
-**Photo questions** (cropped from a paper, options printed in the picture):
+**Example** (mixed form, with a diagram):
 
 ```json
-{ "chapter": "phy.ray-optics", "format": "single", "image": "img/q007.webp",
-  "optionsInImage": true, "imageSplit": 0.62,
-  "options": [{"id":"A"},{"id":"B"},{"id":"C"},{"id":"D"}], "answer": "C",
+{ "chapter": "phy.ray-optics", "format": "single",
+  "stem": "A ray travels from glass $(\\mu = 1.5)$ towards air and just grazes the surface, as shown. The angle $C$ is closest to",
+  "image": "fig/q007-1.webp",
+  "options": [{"id":"A","text":"$30^\\circ$"},{"id":"B","text":"$42^\\circ$"},{"id":"C","text":"$48^\\circ$"},{"id":"D","text":"$60^\\circ$"}],
+  "answer": "B",
   "source": {"exam": "JEE Advanced", "year": 2023, "paper": "P1", "qno": "7"},
   "verified": "official" }
 ```
-
-`imageSplit` is where the options start (fraction of the image height); "think first" mode blurs everything below it until he taps. Options in an image are never shuffled.
 
 **Distractor pool**: for text single-correct questions, `distractors` holds extra believable wrong options; practice picks a fresh set each time.
 
@@ -68,7 +69,7 @@ Common fields: `chapter` (required), `id` (optional; derived from content if mis
 
 ## To Remember
 
-Common fields: `chapter`, `title`, `topic`, `id?`, `source?`, `verified`, `tags`.
+Common fields: `chapter`, `title`, `topic`, `id?`, `source?`, `verified`, `uncertain?`, `tags`.
 
 | kind | fields |
 |---|---|

@@ -99,7 +99,7 @@ export function ResultPage() {
       <Sheet open={!!oq} onClose={() => setOpen(undefined)} title={open ? `Question ${result.perQuestion.indexOf(open) + 1}` : ''} wide>
         {oq && open && (
           <div className="review">
-            <QuestionStem q={oq} thinkFirst={false} revealed onReveal={() => {}} />
+            <QuestionStem q={oq} />
             <AnswerInput q={oq} value={oresp} onChange={() => {}} reveal variant="cbt" />
             <p>
               Your answer: <b>{describeResponse(oq, oresp)}</b> · Key: <b>{describeAnswer(oq)}</b> · Marks: <b>{open.marks}</b>

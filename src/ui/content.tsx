@@ -1,7 +1,6 @@
 // Rendering of content: rich text, images from IndexedDB, question stems.
 
 import { memo, useEffect, useState } from 'react'
-import { Eye } from 'lucide-react'
 import { db } from '../db/db'
 import { renderMath, renderRich } from './rich'
 import { cx } from './kit'
@@ -50,26 +49,6 @@ export function MediaImage({ src, alt = '', className }: { src?: string; alt?: s
   return url ? <img className={cx('media', className)} src={url} alt={alt} loading="lazy" /> : <div className={cx('media media-loading', className)} />
 }
 
-/**
- * A photo question whose options are printed in the image. In "think first" mode the part
- * below `split` stays blurred until he commits to an idea.
- */
-export function SplitImage({ src, split, thinkFirst, revealed, onReveal }: { src: string; split?: number; thinkFirst: boolean; revealed: boolean; onReveal: () => void }) {
-  const url = useMediaUrl(src)
-  const hide = thinkFirst && split !== undefined && !revealed
-  return (
-    <div className="split-img">
-      {url ? <img src={url} alt="Question" /> : <div className="media media-loading" />}
-      {hide && (
-        <button type="button" className="split-cover" style={{ top: `${split * 100}%` }} onClick={onReveal}>
-          <Eye size={18} />
-          <span>Think first — then tap to see the options</span>
-        </button>
-      )}
-    </div>
-  )
-}
-
 export function PassageView({ passage }: { passage: Passage }) {
   return (
     <div className="passage">
@@ -89,8 +68,8 @@ export function usePassage(id: string | undefined): Passage | undefined {
   return p
 }
 
-/** Stem, figure, assertion/reason. Answer inputs are separate (see answer.tsx). */
-export function QuestionStem({ q, thinkFirst, revealed, onReveal }: { q: Question; thinkFirst: boolean; revealed: boolean; onReveal: () => void }) {
+/** Question text, diagram, assertion/reason. Answer inputs are separate (see answer.tsx). */
+export function QuestionStem({ q }: { q: Question }) {
   const passage = usePassage(q.passage)
   return (
     <div className="stem">
@@ -106,12 +85,7 @@ export function QuestionStem({ q, thinkFirst, revealed, onReveal }: { q: Questio
           </div>
         </div>
       )}
-      {q.image &&
-        ('optionsInImage' in q && q.optionsInImage ? (
-          <SplitImage src={q.image} split={q.imageSplit} thinkFirst={thinkFirst} revealed={revealed} onReveal={onReveal} />
-        ) : (
-          <MediaImage src={q.image} alt="Question figure" className="stem-img" />
-        ))}
+      {q.image && <MediaImage src={q.image} alt="Diagram" className="stem-img" />}
     </div>
   )
 }

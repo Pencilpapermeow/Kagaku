@@ -62,10 +62,10 @@ const questionBase = {
   id: zId.optional(),
   chapter: zChapterId,
   topic: z.string().max(160).optional(),
+  /** The full question as text + LaTeX. Never a photo of the question. */
   stem: zRich.default(''),
+  /** A small crop of the diagram only, when the question has one. */
   image: zMedia.optional(),
-  /** Fraction (0–1) of the stem image height where the printed options begin. Enables "think first". */
-  imageSplit: z.number().gt(0).lt(1).optional(),
   passage: zId.optional(),
   solution: zRich.optional(),
   solutionImage: zMedia.optional(),
@@ -73,14 +73,14 @@ const questionBase = {
   verified: zVerified.default('unverified'),
   tags: z.array(z.string().max(60)).max(30).default([]),
   difficulty: z.number().int().min(1).max(3).optional(),
+  /** What the transcriber was unsure about (accuracy layer 2); shown on the review screen. */
+  uncertain: z.string().max(500).optional(),
 }
 
 const choice = {
   options: z.array(zOption).min(2).max(10),
   /** Extra wrong options; practice mode picks some at random so the option set keeps changing. */
   distractors: z.array(zDistractor).max(20).optional(),
-  /** The options are printed inside the stem image (photo questions): order can't be shuffled. */
-  optionsInImage: z.boolean().optional(),
 }
 
 export const ASSERTION_CODES = ['both-explains', 'both-not-explains', 'a-only', 'r-only', 'neither'] as const
@@ -152,6 +152,7 @@ const rememberBase = {
   source: zSource.optional(),
   verified: zVerified.default('unverified'),
   tags: z.array(z.string().max(60)).max(30).default([]),
+  uncertain: z.string().max(500).optional(),
 }
 
 export const zRemember = z.discriminatedUnion('kind', [

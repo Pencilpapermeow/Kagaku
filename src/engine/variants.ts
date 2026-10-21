@@ -4,7 +4,8 @@
 //   2. wrong options are drawn from a larger distractor pool when one exists;
 //   3. sometimes the correct option is removed and "None of these" becomes correct
 //      (and just as often "None of these" appears as a wrong option, so it gives nothing away).
-// Photo questions with options printed in the image keep their order.
+// The only exception: his own "add a mistake from paper" photos, whose options are bare
+// letters A–D pointing at the photo, keep their order.
 
 import type { Option, Question } from '../content/schema'
 import { shuffle, sample, type Rng } from './rng'
@@ -16,9 +17,14 @@ export interface VariantOptions {
   noneOfTheseRate: number
 }
 
+/** Options that are only letters (no text, no image) refer to a photo and can't move. */
+export function isLettersOnly(q: Question): boolean {
+  return (q.format === 'single' || q.format === 'multiple') && q.options.every((o) => !o.text && !o.image)
+}
+
 export function presentQuestion(q: Question, rng: Rng, opts: VariantOptions): Question {
   if (q.format !== 'single' && q.format !== 'multiple') return q
-  if (q.optionsInImage) return q
+  if (isLettersOnly(q)) return q
 
   if (q.format === 'multiple') return { ...q, options: shuffle(q.options, rng) }
 

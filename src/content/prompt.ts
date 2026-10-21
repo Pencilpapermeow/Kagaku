@@ -13,7 +13,12 @@ Top level:
 {"format":"kagaku-pack","version":1,"id":"<short-unique-id>","title":"<what this is>","createdAt":"<YYYY-MM-DD>",
  "questions":[...], "remember":[...], "passages":[...], "papers":[...]}   (leave out empty lists)
 
-Text fields: plain text with $inline LaTeX$, $$display LaTeX$$, \\ce{...} for chemistry, **bold**.
+MIXED FORM — the only way questions are stored:
+- Write every question and every option as text: plain text with $inline LaTeX$, $$display LaTeX$$,
+  \\ce{...} for chemistry, **bold**. Never put a photo of the whole question or of a page.
+- If the question has a diagram, it goes in "image" as a small crop of the diagram only
+  (for a pack you send as text, leave "image" out and say in "uncertain" that a diagram is needed).
+- If you are unsure about any symbol, number or word, say exactly what in "uncertain".
 Every item needs "chapter": one of the ids below. Pick the best match; never invent ids.
 "verified": "official" only if the answer comes from an official key; otherwise "unverified".
 

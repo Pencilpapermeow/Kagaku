@@ -42,6 +42,15 @@ describe('validation', () => {
     expect(preview.ok).toBe(false)
     expect(preview.issues.map((i) => i.message).join()).toContain('"C" is not one of the option ids')
   })
+  it('refuses photo-form questions: text is required, the old photo flags are unknown', async () => {
+    const photoOnly = samplePack({ questions: [{ chapter: 'phy.ray-optics', format: 'integer', stem: '', image: PNG_DATA_URI, answer: 1 }], remember: [] })
+    const a = await preparePack(await readPackSource(JSON.stringify(photoOnly)))
+    expect(a.ok).toBe(false)
+    expect(a.issues[0].message).toContain('question text is missing')
+    const flagged = JSON.parse(JSON.stringify(samplePack({ remember: [] })))
+    flagged.questions[0].optionsInImage = true
+    expect((await preparePack(await readPackSource(JSON.stringify(flagged)))).ok).toBe(false)
+  })
   it('accepts chapters defined inside the pack', async () => {
     const pack = samplePack({
       chapters: [{ id: 'phy.new-thing', unit: 'misc', cls: 12, name: 'New Thing' }],

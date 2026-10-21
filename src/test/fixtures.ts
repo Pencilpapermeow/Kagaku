@@ -47,12 +47,16 @@ export function samplePack(over: Partial<PackInput> = {}): PackInput {
       {
         chapter: 'phy.thermodynamics',
         format: 'single',
-        stem: '',
+        stem: 'The P–V diagram shows a cyclic process. The net work done by the gas is',
         image: PNG_DATA_URI,
-        options: [{ id: 'A' }, { id: 'B' }, { id: 'C' }, { id: 'D' }],
-        optionsInImage: true,
-        imageSplit: 0.6,
-        answer: 'C',
+        options: [
+          { id: 'A', text: 'positive' },
+          { id: 'B', text: 'negative' },
+          { id: 'C', text: 'zero' },
+          { id: 'D', text: 'cannot be found' },
+        ],
+        answer: 'A',
+        uncertain: 'direction of the cycle arrow is faint in the source',
       },
     ],
     remember: [

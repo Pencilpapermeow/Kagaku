@@ -97,6 +97,8 @@ export interface QMetaRow {
   /** Replacement answer after "Key was wrong → fix". Same shape as the question's `answer`. */
   fixedAnswer?: unknown
   reports?: { at: number; text: string }[]
+  /** When he ticked this item on the review screen (accuracy layer 4). */
+  reviewedAt?: number
 }
 
 export interface TestResponse {

@@ -26,7 +26,7 @@ export function ChapterPage() {
 
   return (
     <div style={{ ['--tint' as string]: SUBJECT_COLOR[ch.subject] }}>
-      <TopBar title={ch.name} sub={`${getSubject(ch.subject).name} · ${unit} · Class ${ch.cls}`} back={`/s/${ch.subject}`} />
+      <TopBar title={ch.name} sub={`${ch.no ? `Ch ${ch.no} · ` : ''}${getSubject(ch.subject).name} · ${unit} · Class ${ch.cls}`} back={`/s/${ch.subject}`} />
       <Tabs
         value={tab}
         onChange={(t) => setParams({ tab: t }, { replace: true })}
@@ -91,7 +91,7 @@ function Hidden({ hide, children, className }: { hide: boolean; children: ReactN
   )
 }
 
-function RememberCard({ r, hide }: { r: RememberRow; hide: boolean }) {
+export function RememberCard({ r, hide }: { r: RememberRow; hide: boolean }) {
   return (
     <article className={cx('card rcard', `rcard-${r.kind}`)}>
       <header className="rcard-head">

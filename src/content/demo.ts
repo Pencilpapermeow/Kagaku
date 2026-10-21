@@ -3,19 +3,23 @@
 
 import type { PackInput } from './schema'
 
-const svg = (body: string, h: number) =>
+// Diagrams are the only images in a question (mixed form); this one is drawn inline.
+const RAY_DIAGRAM =
   'data:image/svg+xml;utf8,' +
   encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="720" height="${h}" viewBox="0 0 720 ${h}"><rect width="720" height="${h}" fill="#fff"/><g font-family="Georgia, serif" font-size="26" fill="#111">${body}</g></svg>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="360" height="200" viewBox="0 0 360 200">
+      <rect width="360" height="200" fill="#fff"/>
+      <rect y="100" width="360" height="100" fill="#dbeafe"/>
+      <line x1="0" y1="100" x2="360" y2="100" stroke="#1e3a8a" stroke-width="2"/>
+      <line x1="180" y1="20" x2="180" y2="190" stroke="#555" stroke-dasharray="5 5"/>
+      <line x1="90" y1="190" x2="180" y2="100" stroke="#dc2626" stroke-width="3"/>
+      <line x1="180" y1="100" x2="340" y2="99" stroke="#dc2626" stroke-width="3"/>
+      <path d="M180 150 A50 50 0 0 1 144 136" fill="none" stroke="#111" stroke-width="1.5"/>
+      <g font-family="Georgia, serif" font-size="18" fill="#111">
+        <text x="150" y="172">C</text><text x="12" y="88">air</text><text x="12" y="125">glass (μ = 1.5)</text>
+      </g>
+    </svg>`,
   )
-
-const CRITICAL_ANGLE = svg(
-  `<text x="24" y="50">Q. A ray of light travels from glass (μ = 1.5) into air.</text>
-   <text x="24" y="90">The critical angle for the glass–air surface is closest to</text>
-   <text x="24" y="200">(A) 30°</text><text x="380" y="200">(B) 42°</text>
-   <text x="24" y="250">(C) 48°</text><text x="380" y="250">(D) 60°</text>`,
-  290,
-)
 
 export const DEMO_PACK: PackInput = {
   format: 'kagaku-pack',
@@ -152,11 +156,15 @@ export const DEMO_PACK: PackInput = {
       id: 'demo-phy-10',
       chapter: 'phy.ray-optics',
       format: 'single',
-      stem: '',
-      image: CRITICAL_ANGLE,
-      imageSplit: 0.5,
-      optionsInImage: true,
-      options: [{ id: 'A' }, { id: 'B' }, { id: 'C' }, { id: 'D' }],
+      stem: 'A ray travels from glass $(\\mu = 1.5)$ towards air and just grazes the surface, as shown. The angle $C$ is closest to',
+      image: RAY_DIAGRAM,
+      options: [
+        { id: 'A', text: '$30^\\circ$' },
+        { id: 'B', text: '$42^\\circ$' },
+        { id: 'C', text: '$48^\\circ$' },
+        { id: 'D', text: '$60^\\circ$' },
+      ],
+      distractors: [{ text: '$37^\\circ$' }, { text: '$53^\\circ$' }],
       answer: 'B',
       solution: '$\\sin C = 1/\\mu = 2/3 \\Rightarrow C \\approx 41.8^\\circ$',
       verified: 'checked',

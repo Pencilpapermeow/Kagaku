@@ -135,28 +135,78 @@ test('search finds formulas and ions', async ({ page }) => {
   await expect(page.getByText('Common polyatomic ions')).toBeVisible()
 })
 
-test('imports a .kagaku file; photo questions hide options until "think first" is tapped', async ({ page }) => {
+test('imports a .kagaku file: text question with a small diagram, options shuffled', async ({ page }) => {
   const { zipSync, strToU8 } = await import('fflate')
-  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300"><rect width="600" height="300" fill="#fff"/><text x="20" y="60" font-size="28">Q. Photo question</text><text x="20" y="220" font-size="28">(A) 1  (B) 2  (C) 3  (D) 4</text></svg>'
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="120"><rect width="200" height="120" fill="#fff"/><line x1="10" y1="110" x2="190" y2="10" stroke="#000"/></svg>'
+  const pack = {
+    format: 'kagaku-pack',
+    version: 1,
+    id: 'e2e-diagram',
+    title: 'Diagram pack',
+    createdAt: '2026-10-21',
+    questions: [
+      {
+        chapter: 'phy.ray-optics',
+        format: 'single',
+        stem: 'The slope of the line in the figure is',
+        image: 'fig/line.svg',
+        options: [{ id: 'A', text: 'positive' }, { id: 'B', text: 'negative' }, { id: 'C', text: 'zero' }, { id: 'D', text: 'undefined' }],
+        answer: 'A',
+      },
+    ],
+  }
+  const zip = zipSync({ 'pack.json': strToU8(JSON.stringify(pack)), 'fig/line.svg': strToU8(svg) })
+  await page.goto('#/update')
+  await page.locator('input[type=file]').setInputFiles({ name: 'diagram.kagaku', mimeType: 'application/zip', buffer: Buffer.from(zip) })
+  await expect(page.getByText('1 images')).toBeVisible()
+  await page.getByRole('button', { name: 'Add to Kagaku' }).click()
+  await expect(page.getByRole('button', { name: 'Remove Diagram pack' })).toBeVisible()
+  await page.goto('#/practice?c=phy.ray-optics&m=questions')
+  await expect(page.getByAltText('Diagram')).toBeVisible()
+  await page.locator('.choice', { hasText: 'positive' }).click()
+  await page.getByRole('button', { name: 'Check' }).click()
+  await expect(page.locator('.feedback.good')).toBeVisible()
+})
+
+test('a pack that stores a question only as a photo is refused', async ({ page }) => {
   const pack = {
     format: 'kagaku-pack',
     version: 1,
     id: 'e2e-photo',
     title: 'Photo pack',
     createdAt: '2026-10-21',
-    questions: [{ chapter: 'phy.ray-optics', format: 'single', image: 'img/q.svg', imageSplit: 0.55, optionsInImage: true, options: [{ id: 'A' }, { id: 'B' }, { id: 'C' }, { id: 'D' }], answer: 'C' }],
+    questions: [{ chapter: 'phy.ray-optics', format: 'integer', stem: '', image: 'data:image/png;base64,iVBORw0KGgo=', answer: 2 }],
   }
-  const zip = zipSync({ 'pack.json': strToU8(JSON.stringify(pack)), 'img/q.svg': strToU8(svg) })
   await page.goto('#/update')
-  await page.locator('input[type=file]').setInputFiles({ name: 'photo.kagaku', mimeType: 'application/zip', buffer: Buffer.from(zip) })
-  await expect(page.getByText('1 images')).toBeVisible()
+  await page.getByPlaceholder(/kagaku-pack/).fill(JSON.stringify(pack))
+  await page.getByRole('button', { name: 'Check pasted pack' }).click()
+  await expect(page.getByText(/question text is missing/)).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Add to Kagaku' })).toHaveCount(0)
+})
+
+test('review screen: flagged items come first and leave the queue after a tick', async ({ page }) => {
+  const pack = {
+    format: 'kagaku-pack',
+    version: 1,
+    id: 'e2e-review',
+    title: 'Review pack',
+    createdAt: '2026-10-21',
+    questions: [
+      { chapter: 'phy.ray-optics', format: 'integer', stem: 'Number of images formed by two mirrors at $90^\\circ$?', answer: 3, uncertain: 'angle could be 60° in the source' },
+      { chapter: 'phy.ray-optics', format: 'truefalse', stem: 'A plane mirror forms a virtual image.', answer: true, verified: 'official' },
+    ],
+  }
+  await page.goto('#/update')
+  await page.getByPlaceholder(/kagaku-pack/).fill(JSON.stringify(pack))
+  await page.getByRole('button', { name: 'Check pasted pack' }).click()
   await page.getByRole('button', { name: 'Add to Kagaku' }).click()
-  await expect(page.getByRole('button', { name: 'Remove Photo pack' })).toBeVisible()
-  await page.goto('#/practice?c=phy.ray-optics&m=questions')
-  await expect(page.getByText(/Think first/)).toBeVisible()
-  await expect(page.locator('.choice')).toHaveCount(0)
-  await page.getByText(/Think first/).click()
-  await page.locator('.choice[data-option="C"]').click()
-  await page.getByRole('button', { name: 'Check' }).click()
-  await expect(page.locator('.feedback.good')).toBeVisible()
+  await expect(page.getByText('2 waiting for your tick · 1 need special care')).toBeVisible()
+  await page.getByText('Review new content').click()
+  await expect(page.getByText('angle could be 60° in the source')).toBeVisible()
+  await page.getByRole('button', { name: 'Looks right' }).click()
+  await expect(page.getByText('Nothing needs special care')).toBeVisible()
+  await page.getByRole('button', { name: 'Everything new' }).click()
+  await expect(page.getByText('A plane mirror forms a virtual image.')).toBeVisible()
+  await page.getByRole('button', { name: 'Looks right' }).click()
+  await expect(page.getByText('All caught up')).toBeVisible()
 })

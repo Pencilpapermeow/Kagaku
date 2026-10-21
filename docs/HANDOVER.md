@@ -4,7 +4,10 @@
 
 ## Updates after the planning chat
 
-- **21 Oct 2026 (build session 1):** Uttam says there are **97 chapters** (not ~75) and sent his handwritten list; `src/content/syllabus.ts` now follows it in his order (Physics 32, Chemistry 35, Maths 30). His row 28 "Dual nature / Atom / Nuclei" is three chapters, which is how his 97 adds up; "Solution of triangle" and "Number theory (basic)" were unnumbered at the end. Chapter ids must stay stable once content uses them (rename `name`, or add `aliases`).
+- **21 Oct 2026 (build session 1):** his handwritten chapter list is the master. **95 numbered chapters**: Physics 1–30, Chemistry 31–65, Maths 66–95 ("Solution of triangle" = 94, "Number theory (basic)" = 95). 28 = Atom/Nuclei (one chapter). "Dual nature of radiation and matter" has no number yet — he will confirm. `src/content/syllabus.ts` carries his numbers (`no`). Chapter ids must stay stable once content uses them (rename `name`, or add `aliases`).
+- **Storage of questions: mixed form only.** Question and options as text + LaTeX; a diagram, if any, as a small crop; options shuffle every time. **Photo form (a crop of the whole question) is dropped completely** — not even as a backup. The five accuracy layers and his review screen apply. This replaces the "Photo form (default)" and "think first" parts of sections 4–5 below.
+- **Material (~6 GB):** stays in his iPad Files and Google Drive. He sends it in this chat in batches (one chapter, or 20–30 images); Claude processes, puts packs in `kagaku-content`, then deletes the raw files from the workspace. Raw material never goes to GitHub. Drive can be listed and read as text by Claude, but not used for bulk processing (see `docs/WORKFLOW.md`).
+- All work happens in the build session; the planning chat is only for discussion.
 - He will send PDFs and photos **every day**. Claude sorts them chapter-wise, makes questions in several formats, and the app stores only the processed questions (compressed crops + JSON), never the raw files. He expects the raw material to total **3–6 GB**.
 - He said "start the work" instead of approving static mockups first, so the foundation was built with real screens; he can redirect the look from the live app.
 - See `docs/ARCHITECTURE.md`, `docs/CONTENT_FORMAT.md`, `docs/WORKFLOW.md` and `docs/CHECKLIST.md`.

@@ -3,7 +3,7 @@
 import { Check, Delete, X } from 'lucide-react'
 import type { Question } from '../content/schema'
 import { ASSERTION_TEXT, effectiveAnswer, type Response } from '../engine/marking'
-import { labelAt } from '../engine/variants'
+import { isLettersOnly, labelAt } from '../engine/variants'
 import { MediaImage, Rich } from './content'
 import { cx } from './kit'
 
@@ -48,7 +48,7 @@ function ChoiceInput({ q, value, onChange, reveal, variant = 'practice' }: Answe
   const chosen = value?.kind === 'options' ? value.ids : []
   const answer = effectiveAnswer(q)
   const correctIds = Array.isArray(answer) ? (answer as string[]) : [answer as string]
-  const compact = 'optionsInImage' in q && q.optionsInImage
+  const compact = isLettersOnly(q)
   const toggle = (id: string) => {
     if (reveal) return
     if (multi) {

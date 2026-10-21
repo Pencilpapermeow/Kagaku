@@ -1,16 +1,17 @@
-"""Clean up a phone photo of a page and cut questions out of it.
+"""Clean up a phone photo of a page, and cut diagrams out of it.
 
-His photos are often rotated 90° and dim. This straightens, evens out the lighting,
-boosts contrast, and saves compact grayscale WebP crops.
+His photos are often rotated 90° and dim. This straightens, evens out the lighting and
+boosts contrast. The cleaned page is a READING REFERENCE for Claude while transcribing the
+questions as text + LaTeX (mixed form); it never goes into a pack. Only diagram crops do.
 
-    # one cleaned page
-    python3 -I tools/process/clean_photo.py page.jpg work/day3/page1.webp --rotate 90
-    # look at it with a labelled grid to pick crop boxes (fractions of width/height)
+    # cleaned page to read from
+    python3 -I tools/process/clean_photo.py page.jpg work/day3/ref/p1.webp --rotate 90
+    # the same with a labelled 10x10 grid, to pick diagram boxes (fractions of width/height)
     python3 -I tools/process/clean_photo.py page.jpg work/day3/grid.jpg --rotate 90 --grid
-    # cut questions: each box is x0,y0,x1,y1[,split] in 0–1 fractions of the cleaned page
-    python3 -I tools/process/clean_photo.py page.jpg work/day3/img/p1 --rotate 90 \
-        --box 0.05,0.10,0.95,0.38,0.7 --box 0.05,0.40,0.95,0.70
-    (writes p1-1.webp, p1-2.webp and prints each box's options split)
+    # cut diagrams: each box is x0,y0,x1,y1 in 0–1 fractions of the cleaned page
+    python3 -I tools/process/clean_photo.py page.jpg work/day3/fig/p1 --rotate 90 \
+        --box 0.55,0.12,0.95,0.34 --box 0.10,0.62,0.45,0.80
+    (writes fig/p1-1.webp, fig/p1-2.webp)
 """
 
 from __future__ import annotations
@@ -89,7 +90,7 @@ def main() -> int:
     ap.add_argument("out")
     ap.add_argument("--rotate", type=int, default=0, choices=[0, 90, 180, 270], help="clockwise")
     ap.add_argument("--no-deskew", action="store_true")
-    ap.add_argument("--box", action="append", default=[], help="x0,y0,x1,y1[,split] as fractions")
+    ap.add_argument("--box", action="append", default=[], help="diagram box x0,y0,x1,y1 as fractions")
     ap.add_argument("--grid", action="store_true", help="write a JPEG with a 10x10 labelled grid")
     ap.add_argument("--quality", type=int, default=68)
     args = ap.parse_args()
@@ -113,13 +114,11 @@ def main() -> int:
         print(f"page → {out} ({n / 1024:.0f} KB, deskewed {angle:.1f}°)")
         return 0
     for i, spec in enumerate(args.box, 1):
-        parts = [float(v) for v in spec.split(",")]
-        x0, y0, x1, y1 = parts[:4]
+        x0, y0, x1, y1 = [float(v) for v in spec.split(",")][:4]
         crop = page.crop((round(x0 * page.width), round(y0 * page.height), round(x1 * page.width), round(y1 * page.height)))
         path = out.with_name(f"{out.name}-{i}.webp")
-        n = save_webp(crop, path, args.quality)
-        split = f", split {parts[4]}" if len(parts) > 4 else ""
-        print(f"{path} ({n / 1024:.0f} KB{split})")
+        n = save_webp(crop, path, args.quality, max_w=900)
+        print(f"{path} ({n / 1024:.0f} KB)")
     return 0
 
 

@@ -52,13 +52,15 @@ export function SubjectPage() {
         </div>
       </div>
       <ol className="chapter-list">
-        {list.map((c, i) => {
+        {list.map((c) => {
           const st = stats?.get(c.id)
           const unitName = s.units.find((u) => u.id === c.unit)?.name ?? c.unit
           return (
             <li key={c.id}>
               <Link to={`/c/${c.id}`} className="chapter-row">
-                <span className="chapter-n">{i + 1}</span>
+                <span className="chapter-n" title={c.no ? `Chapter ${c.no}` : 'Number not confirmed yet'}>
+                  {c.no ?? '–'}
+                </span>
                 <span className="chapter-main">
                   <b>{c.name}</b>
                   <span className="muted small">

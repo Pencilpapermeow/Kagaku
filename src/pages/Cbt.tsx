@@ -227,7 +227,7 @@ export function CbtPage() {
           <div className="cbt-q">
             {q ? (
               <>
-                <QuestionStem q={q} thinkFirst={false} revealed onReveal={() => {}} />
+                <QuestionStem q={q} />
                 <AnswerInput q={q} value={draft} onChange={setDraft} variant="cbt" />
               </>
             ) : (

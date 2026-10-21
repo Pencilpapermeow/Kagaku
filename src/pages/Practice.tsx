@@ -14,6 +14,7 @@ import { presentQuestion } from '../engine/variants'
 import { makeRng, randomSeed } from '../engine/rng'
 import { recordAttempt, setGaltiReason } from '../engine/progress'
 import { reportQuestion } from '../engine/verify'
+import { isTrusted } from '../engine/review'
 import { AnswerInput } from '../ui/answer'
 import { QuestionStem, Rich, MediaImage } from '../ui/content'
 import { Bar, Button, Chip, Empty, Stat, cx, formatDuration, toast } from '../ui/kit'
@@ -40,7 +41,6 @@ export function PracticePage() {
   const [i, setI] = useState(0)
   const [response, setResponse] = useState<Response>()
   const [verdict, setVerdict] = useState<Verdict>()
-  const [revealed, setRevealed] = useState(false)
   const [done, setDone] = useState<Done[]>([])
   const [combo, setCombo] = useState(0)
   const [verifyOpen, setVerifyOpen] = useState(false)
@@ -66,19 +66,18 @@ export function PracticePage() {
   useEffect(() => {
     setResponse(undefined)
     setVerdict(undefined)
-    setRevealed(false)
     started.current = Date.now()
   }, [q])
 
   const bookmarked = useLiveQuery(async () => (q ? !!(await db.bookmarks.get(q.id)) : false), [q?.id], false)
   const galtiRow = useLiveQuery(async () => (q ? db.galti.get(q.id) : undefined), [q?.id])
+  const meta = useLiveQuery(async () => (q ? db.qmeta.get(q.id) : undefined), [q?.id])
 
   const submit = useCallback(async () => {
     if (!q || verdict) return
     const v = check(q, response)
     const timeMs = Date.now() - started.current
     setVerdict(v)
-    setRevealed(true)
     setDone((d) => [...d, { q, verdict: v, timeMs }])
     setCombo((c) => (v.correct ? c + 1 : 0))
     setCheer(v.correct ? CHEERS[Math.floor(Math.random() * CHEERS.length)] : '')
@@ -110,13 +109,11 @@ export function PracticePage() {
           <span className="muted small">{chapterName.get(q!.chapter)}</span>
           {q!.source?.label && <span className="muted small">· {q!.source.label}</span>}
           {q!.tags.includes('generated') && <span className="pill pill-accent">from To Remember</span>}
-          {q!.verified === 'unverified' && <span className="pill pill-warn">key unverified</span>}
+          {!isTrusted(q!.verified, meta) && <span className="pill pill-warn">key unverified</span>}
           {galtiRow?.status === 'active' && <span className="pill pill-bad">Galti · {galtiRow.streak}/{settings.graduateAfter}</span>}
         </div>
-        <QuestionStem q={q!} thinkFirst={settings.thinkFirst} revealed={revealed} onReveal={() => setRevealed(true)} />
-        {(!('optionsInImage' in q! && q!.optionsInImage && q!.imageSplit !== undefined && settings.thinkFirst) || revealed) && (
-          <AnswerInput q={q!} value={response} onChange={setResponse} reveal={!!verdict} />
-        )}
+        <QuestionStem q={q!} />
+        <AnswerInput q={q!} value={response} onChange={setResponse} reveal={!!verdict} />
       </div>
 
       {verdict && (

@@ -39,8 +39,8 @@ describe('practice variants', () => {
     expect(right).toBeGreaterThan(800)
     expect(wrong).toBeGreaterThan(800)
   })
-  it('never reorders options printed inside a photo', () => {
-    const photo: Question = { ...q, optionsInImage: true, image: 'media:x' }
+  it('never reorders bare letter options of his own mistake photos', () => {
+    const photo: Question = { ...q, image: 'media:x', options: ['A', 'B', 'C', 'D'].map((id) => ({ id })), distractors: undefined }
     const v = presentQuestion(photo, makeRng(7), { noneOfTheseRate: 1 })
     expect(v).toBe(photo)
   })
