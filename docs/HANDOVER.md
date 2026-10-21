@@ -4,7 +4,7 @@
 
 ## Updates after the planning chat
 
-- **21 Oct 2026 (build session 1):** Uttam says there are **97 chapters** (not ~75). His own list is still to come; `src/content/syllabus.ts` holds a 98-chapter draft built from the JA syllabus, to be replaced by his list. Chapter ids must stay stable once content uses them (rename `name`, or add `aliases`).
+- **21 Oct 2026 (build session 1):** Uttam says there are **97 chapters** (not ~75) and sent his handwritten list; `src/content/syllabus.ts` now follows it in his order (Physics 32, Chemistry 35, Maths 30). His row 28 "Dual nature / Atom / Nuclei" is three chapters, which is how his 97 adds up; "Solution of triangle" and "Number theory (basic)" were unnumbered at the end. Chapter ids must stay stable once content uses them (rename `name`, or add `aliases`).
 - He will send PDFs and photos **every day**. Claude sorts them chapter-wise, makes questions in several formats, and the app stores only the processed questions (compressed crops + JSON), never the raw files. He expects the raw material to total **3–6 GB**.
 - He said "start the work" instead of approving static mockups first, so the foundation was built with real screens; he can redirect the look from the live app.
 - See `docs/ARCHITECTURE.md`, `docs/CONTENT_FORMAT.md`, `docs/WORKFLOW.md` and `docs/CHECKLIST.md`.
