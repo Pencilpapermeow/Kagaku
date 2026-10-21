@@ -5,7 +5,8 @@ async function loadDemo(page: Page) {
   await page.getByRole('button', { name: 'Load the demo pack' }).click()
   await expect(page.getByText('14 questions')).toBeVisible()
   await page.getByRole('button', { name: 'Add to Kagaku' }).click()
-  await expect(page.getByText('Demo pack (try every screen)').first()).toBeVisible()
+  // Wait until the pack is stored (the remove button only exists for installed packs).
+  await expect(page.getByRole('button', { name: 'Remove Demo pack (try every screen)' })).toBeVisible()
 }
 
 async function noSideScroll(page: Page) {
@@ -48,6 +49,7 @@ test('practice: wrong answers go to the Galti Notebook', async ({ page }) => {
   await loadDemo(page)
   await page.goto('#/practice?c=chem.periodicity&m=questions')
   for (let i = 0; i < 2; i++) {
+    await expect(page.locator('.pcard .choice').first()).toBeVisible()
     const tf = page.getByRole('button', { name: 'False' })
     if (await tf.count()) await tf.click()
     else await page.locator('.choice').first().click()
@@ -131,4 +133,30 @@ test('search finds formulas and ions', async ({ page }) => {
   await page.goto('#/search')
   await page.getByLabel('Search').fill('nitrate')
   await expect(page.getByText('Common polyatomic ions')).toBeVisible()
+})
+
+test('imports a .kagaku file; photo questions hide options until "think first" is tapped', async ({ page }) => {
+  const { zipSync, strToU8 } = await import('fflate')
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300"><rect width="600" height="300" fill="#fff"/><text x="20" y="60" font-size="28">Q. Photo question</text><text x="20" y="220" font-size="28">(A) 1  (B) 2  (C) 3  (D) 4</text></svg>'
+  const pack = {
+    format: 'kagaku-pack',
+    version: 1,
+    id: 'e2e-photo',
+    title: 'Photo pack',
+    createdAt: '2026-10-21',
+    questions: [{ chapter: 'phy.ray-optics', format: 'single', image: 'img/q.svg', imageSplit: 0.55, optionsInImage: true, options: [{ id: 'A' }, { id: 'B' }, { id: 'C' }, { id: 'D' }], answer: 'C' }],
+  }
+  const zip = zipSync({ 'pack.json': strToU8(JSON.stringify(pack)), 'img/q.svg': strToU8(svg) })
+  await page.goto('#/update')
+  await page.locator('input[type=file]').setInputFiles({ name: 'photo.kagaku', mimeType: 'application/zip', buffer: Buffer.from(zip) })
+  await expect(page.getByText('1 images')).toBeVisible()
+  await page.getByRole('button', { name: 'Add to Kagaku' }).click()
+  await expect(page.getByRole('button', { name: 'Remove Photo pack' })).toBeVisible()
+  await page.goto('#/practice?c=phy.ray-optics&m=questions')
+  await expect(page.getByText(/Think first/)).toBeVisible()
+  await expect(page.locator('.choice')).toHaveCount(0)
+  await page.getByText(/Think first/).click()
+  await page.locator('.choice[data-option="C"]').click()
+  await page.getByRole('button', { name: 'Check' }).click()
+  await expect(page.locator('.feedback.good')).toBeVisible()
 })

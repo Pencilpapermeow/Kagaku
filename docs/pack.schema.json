@@ -1,0 +1,1907 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "type": "object",
+ "properties": {
+  "format": {
+   "type": "string",
+   "const": "kagaku-pack"
+  },
+  "version": {
+   "type": "number",
+   "const": 1
+  },
+  "id": {
+   "type": "string",
+   "minLength": 1,
+   "maxLength": 160,
+   "pattern": "^[A-Za-z0-9._:-]+$"
+  },
+  "title": {
+   "type": "string",
+   "minLength": 1,
+   "maxLength": 200
+  },
+  "createdAt": {
+   "type": "string",
+   "maxLength": 40
+  },
+  "description": {
+   "type": "string",
+   "maxLength": 2000
+  },
+  "chapters": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "string",
+      "pattern": "^(phy|chem|math)\\.[a-z0-9-]+$"
+     },
+     "unit": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+     },
+     "cls": {
+      "anyOf": [
+       {
+        "type": "number",
+        "const": 11
+       },
+       {
+        "type": "number",
+        "const": 12
+       }
+      ]
+     },
+     "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160
+     },
+     "aliases": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "topics": {
+      "type": "array",
+      "items": {
+       "type": "string",
+       "maxLength": 160
+      }
+     }
+    },
+    "required": [
+     "id",
+     "unit",
+     "cls",
+     "name"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "passages": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "pattern": "^[A-Za-z0-9._:-]+$"
+     },
+     "chapter": {
+      "type": "string",
+      "pattern": "^(phy|chem|math)\\.[a-z0-9-]+$"
+     },
+     "title": {
+      "type": "string",
+      "maxLength": 200
+     },
+     "text": {
+      "default": "",
+      "type": "string",
+      "maxLength": 20000
+     },
+     "image": {
+      "type": "string",
+      "minLength": 1
+     }
+    },
+    "required": [
+     "id",
+     "chapter"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "questions": {
+   "type": "array",
+   "items": {
+    "oneOf": [
+     {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9._:-]+$"
+       },
+       "chapter": {
+        "type": "string",
+        "pattern": "^(phy|chem|math)\\.[a-z0-9-]+$"
+       },
+       "topic": {
+        "type": "string",
+        "maxLength": 160
+       },
+       "stem": {
+        "default": "",
+        "type": "string",
+        "maxLength": 20000
+       },
+       "image": {
+        "type": "string",
+        "minLength": 1
+       },
+       "imageSplit": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "exclusiveMaximum": 1
+       },
+       "passage": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9._:-]+$"
+       },
+       "solution": {
+        "type": "string",
+        "maxLength": 20000
+       },
+       "solutionImage": {
+        "type": "string",
+        "minLength": 1
+       },
+       "source": {
+        "type": "object",
+        "properties": {
+         "exam": {
+          "type": "string",
+          "maxLength": 80
+         },
+         "year": {
+          "type": "integer",
+          "minimum": 1950,
+          "maximum": 2100
+         },
+         "paper": {
+          "type": "string",
+          "maxLength": 120
+         },
+         "qno": {
+          "type": "string",
+          "maxLength": 20
+         },
+         "label": {
+          "type": "string",
+          "maxLength": 200
+         }
+        },
+        "additionalProperties": false
+       },
+       "verified": {
+        "default": "unverified",
+        "type": "string",
+        "enum": [
+         "official",
+         "checked",
+         "unverified"
+        ]
+       },
+       "tags": {
+        "default": [],
+        "maxItems": 30,
+        "type": "array",
+        "items": {
+         "type": "string",
+         "maxLength": 60
+        }
+       },
+       "difficulty": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 3
+       },
+       "format": {
+        "type": "string",
+        "const": "single"
+       },
+       "options": {
+        "minItems": 2,
+        "maxItems": 10,
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "id": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 4
+          },
+          "text": {
+           "type": "string",
+           "maxLength": 20000
+          },
+          "image": {
+           "type": "string",
+           "minLength": 1
+          }
+         },
+         "required": [
+          "id"
+         ],
+         "additionalProperties": false
+        }
+       },
+       "distractors": {
+        "maxItems": 20,
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "text": {
+           "type": "string",
+           "maxLength": 20000
+          },
+          "image": {
+           "type": "string",
+           "minLength": 1
+          }
+         },
+         "additionalProperties": false
+        }
+       },
+       "optionsInImage": {
+        "type": "boolean"
+       },
+       "answer": {
+        "type": "string",
+        "minLength": 1
+       }
+      },
+      "required": [
+       "chapter",
+       "format",
+       "options",
+       "answer"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9._:-]+$"
+       },
+       "chapter": {
+        "type": "string",
+        "pattern": "^(phy|chem|math)\\.[a-z0-9-]+$"
+       },
+       "topic": {
+        "type": "string",
+        "maxLength": 160
+       },
+       "stem": {
+        "default": "",
+        "type": "string",
+        "maxLength": 20000
+       },
+       "image": {
+        "type": "string",
+        "minLength": 1
+       },
+       "imageSplit": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "exclusiveMaximum": 1
+       },
+       "passage": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9._:-]+$"
+       },
+       "solution": {
+        "type": "string",
+        "maxLength": 20000
+       },
+       "solutionImage": {
+        "type": "string",
+        "minLength": 1
+       },
+       "source": {
+        "type": "object",
+        "properties": {
+         "exam": {
+          "type": "string",
+          "maxLength": 80
+         },
+         "year": {
+          "type": "integer",
+          "minimum": 1950,
+          "maximum": 2100
+         },
+         "paper": {
+          "type": "string",
+          "maxLength": 120
+         },
+         "qno": {
+          "type": "string",
+          "maxLength": 20
+         },
+         "label": {
+          "type": "string",
+          "maxLength": 200
+         }
+        },
+        "additionalProperties": false
+       },
+       "verified": {
+        "default": "unverified",
+        "type": "string",
+        "enum": [
+         "official",
+         "checked",
+         "unverified"
+        ]
+       },
+       "tags": {
+        "default": [],
+        "maxItems": 30,
+        "type": "array",
+        "items": {
+         "type": "string",
+         "maxLength": 60
+        }
+       },
+       "difficulty": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 3
+       },
+       "format": {
+        "type": "string",
+        "const": "multiple"
+       },
+       "options": {
+        "minItems": 2,
+        "maxItems": 10,
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "id": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 4
+          },
+          "text": {
+           "type": "string",
+           "maxLength": 20000
+          },
+          "image": {
+           "type": "string",
+           "minLength": 1
+          }
+         },
+         "required": [
+          "id"
+         ],
+         "additionalProperties": false
+        }
+       },
+       "distractors": {
+        "maxItems": 20,
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "text": {
+           "type": "string",
+           "maxLength": 20000
+          },
+          "image": {
+           "type": "string",
+           "minLength": 1
+          }
+         },
+         "additionalProperties": false
+        }
+       },
+       "optionsInImage": {
+        "type": "boolean"
+       },
+       "answer": {
+        "minItems": 1,
+        "type": "array",
+        "items": {
+         "type": "string",
+         "minLength": 1
+        }
+       }
+      },
+      "required": [
+       "chapter",
+       "format",
+       "options",
+       "answer"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9._:-]+$"
+       },
+       "chapter": {
+        "type": "string",
+        "pattern": "^(phy|chem|math)\\.[a-z0-9-]+$"
+       },
+       "topic": {
+        "type": "string",
+        "maxLength": 160
+       },
+       "stem": {
+        "default": "",
+        "type": "string",
+        "maxLength": 20000
+       },
+       "image": {
+        "type": "string",
+        "minLength": 1
+       },
+       "imageSplit": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "exclusiveMaximum": 1
+       },
+       "passage": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9._:-]+$"
+       },
+       "solution": {
+        "type": "string",
+        "maxLength": 20000
+       },
+       "solutionImage": {
+        "type": "string",
+        "minLength": 1
+       },
+       "source": {
+        "type": "object",
+        "properties": {
+         "exam": {
+          "type": "string",
+          "maxLength": 80
+         },
+         "year": {
+          "type": "integer",
+          "minimum": 1950,
+          "maximum": 2100
+         },
+         "paper": {
+          "type": "string",
+          "maxLength": 120
+         },
+         "qno": {
+          "type": "string",
+          "maxLength": 20
+         },
+         "label": {
+          "type": "string",
+          "maxLength": 200
+         }
+        },
+        "additionalProperties": false
+       },
+       "verified": {
+        "default": "unverified",
+        "type": "string",
+        "enum": [
+         "official",
+         "checked",
+         "unverified"
+        ]
+       },
+       "tags": {
+        "default": [],
+        "maxItems": 30,
+        "type": "array",
+        "items": {
+         "type": "string",
+         "maxLength": 60
+        }
+       },
+       "difficulty": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 3
+       },
+       "format": {
+        "type": "string",
+        "const": "integer"
+       },
+       "answer": {
+        "type": "integer",
+        "minimum": -9007199254740991,
+        "maximum": 9007199254740991
+       }
+      },
+      "required": [
+       "chapter",
+       "format",
+       "answer"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9._:-]+$"
+       },
+       "chapter": {
+        "type": "string",
+        "pattern": "^(phy|chem|math)\\.[a-z0-9-]+$"
+       },
+       "topic": {
+        "type": "string",
+        "maxLength": 160
+       },
+       "stem": {
+        "default": "",
+        "type": "string",
+        "maxLength": 20000
+       },
+       "image": {
+        "type": "string",
+        "minLength": 1
+       },
+       "imageSplit": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "exclusiveMaximum": 1
+       },
+       "passage": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9._:-]+$"
+       },
+       "solution": {
+        "type": "string",
+        "maxLength": 20000
+       },
+       "solutionImage": {
+        "type": "string",
+        "minLength": 1
+       },
+       "source": {
+        "type": "object",
+        "properties": {
+         "exam": {
+          "type": "string",
+          "maxLength": 80
+         },
+         "year": {
+          "type": "integer",
+          "minimum": 1950,
+          "maximum": 2100
+         },
+         "paper": {
+          "type": "string",
+          "maxLength": 120
+         },
+         "qno": {
+          "type": "string",
+          "maxLength": 20
+         },
+         "label": {
+          "type": "string",
+          "maxLength": 200
+         }
+        },
+        "additionalProperties": false
+       },
+       "verified": {
+        "default": "unverified",
+        "type": "string",
+        "enum": [
+         "official",
+         "checked",
+         "unverified"
+        ]
+       },
+       "tags": {
+        "default": [],
+        "maxItems": 30,
+        "type": "array",
+        "items": {
+         "type": "string",
+         "maxLength": 60
+        }
+       },
+       "difficulty": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 3
+       },
+       "format": {
+        "type": "string",
+        "const": "numerical"
+       },
+       "answer": {
+        "type": "number"
+       },
+       "tolerance": {
+        "type": "number",
+        "minimum": 0
+       }
+      },
+      "required": [
+       "chapter",
+       "format",
+       "answer"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9._:-]+$"
+       },
+       "chapter": {
+        "type": "string",
+        "pattern": "^(phy|chem|math)\\.[a-z0-9-]+$"
+       },
+       "topic": {
+        "type": "string",
+        "maxLength": 160
+       },
+       "stem": {
+        "default": "",
+        "type": "string",
+        "maxLength": 20000
+       },
+       "image": {
+        "type": "string",
+        "minLength": 1
+       },
+       "imageSplit": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "exclusiveMaximum": 1
+       },
+       "passage": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9._:-]+$"
+       },
+       "solution": {
+        "type": "string",
+        "maxLength": 20000
+       },
+       "solutionImage": {
+        "type": "string",
+        "minLength": 1
+       },
+       "source": {
+        "type": "object",
+        "properties": {
+         "exam": {
+          "type": "string",
+          "maxLength": 80
+         },
+         "year": {
+          "type": "integer",
+          "minimum": 1950,
+          "maximum": 2100
+         },
+         "paper": {
+          "type": "string",
+          "maxLength": 120
+         },
+         "qno": {
+          "type": "string",
+          "maxLength": 20
+         },
+         "label": {
+          "type": "string",
+          "maxLength": 200
+         }
+        },
+        "additionalProperties": false
+       },
+       "verified": {
+        "default": "unverified",
+        "type": "string",
+        "enum": [
+         "official",
+         "checked",
+         "unverified"
+        ]
+       },
+       "tags": {
+        "default": [],
+        "maxItems": 30,
+        "type": "array",
+        "items": {
+         "type": "string",
+         "maxLength": 60
+        }
+       },
+       "difficulty": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 3
+       },
+       "format": {
+        "type": "string",
+        "const": "assertion"
+       },
+       "assertion": {
+        "type": "string",
+        "maxLength": 20000
+       },
+       "reason": {
+        "type": "string",
+        "maxLength": 20000
+       },
+       "answer": {
+        "type": "string",
+        "enum": [
+         "both-explains",
+         "both-not-explains",
+         "a-only",
+         "r-only",
+         "neither"
+        ]
+       },
+       "withNeither": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "chapter",
+       "format",
+       "assertion",
+       "reason",
+       "answer"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9._:-]+$"
+       },
+       "chapter": {
+        "type": "string",
+        "pattern": "^(phy|chem|math)\\.[a-z0-9-]+$"
+       },
+       "topic": {
+        "type": "string",
+        "maxLength": 160
+       },
+       "stem": {
+        "default": "",
+        "type": "string",
+        "maxLength": 20000
+       },
+       "image": {
+        "type": "string",
+        "minLength": 1
+       },
+       "imageSplit": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "exclusiveMaximum": 1
+       },
+       "passage": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9._:-]+$"
+       },
+       "solution": {
+        "type": "string",
+        "maxLength": 20000
+       },
+       "solutionImage": {
+        "type": "string",
+        "minLength": 1
+       },
+       "source": {
+        "type": "object",
+        "properties": {
+         "exam": {
+          "type": "string",
+          "maxLength": 80
+         },
+         "year": {
+          "type": "integer",
+          "minimum": 1950,
+          "maximum": 2100
+         },
+         "paper": {
+          "type": "string",
+          "maxLength": 120
+         },
+         "qno": {
+          "type": "string",
+          "maxLength": 20
+         },
+         "label": {
+          "type": "string",
+          "maxLength": 200
+         }
+        },
+        "additionalProperties": false
+       },
+       "verified": {
+        "default": "unverified",
+        "type": "string",
+        "enum": [
+         "official",
+         "checked",
+         "unverified"
+        ]
+       },
+       "tags": {
+        "default": [],
+        "maxItems": 30,
+        "type": "array",
+        "items": {
+         "type": "string",
+         "maxLength": 60
+        }
+       },
+       "difficulty": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 3
+       },
+       "format": {
+        "type": "string",
+        "const": "truefalse"
+       },
+       "answer": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "chapter",
+       "format",
+       "answer"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9._:-]+$"
+       },
+       "chapter": {
+        "type": "string",
+        "pattern": "^(phy|chem|math)\\.[a-z0-9-]+$"
+       },
+       "topic": {
+        "type": "string",
+        "maxLength": 160
+       },
+       "stem": {
+        "default": "",
+        "type": "string",
+        "maxLength": 20000
+       },
+       "image": {
+        "type": "string",
+        "minLength": 1
+       },
+       "imageSplit": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "exclusiveMaximum": 1
+       },
+       "passage": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9._:-]+$"
+       },
+       "solution": {
+        "type": "string",
+        "maxLength": 20000
+       },
+       "solutionImage": {
+        "type": "string",
+        "minLength": 1
+       },
+       "source": {
+        "type": "object",
+        "properties": {
+         "exam": {
+          "type": "string",
+          "maxLength": 80
+         },
+         "year": {
+          "type": "integer",
+          "minimum": 1950,
+          "maximum": 2100
+         },
+         "paper": {
+          "type": "string",
+          "maxLength": 120
+         },
+         "qno": {
+          "type": "string",
+          "maxLength": 20
+         },
+         "label": {
+          "type": "string",
+          "maxLength": 200
+         }
+        },
+        "additionalProperties": false
+       },
+       "verified": {
+        "default": "unverified",
+        "type": "string",
+        "enum": [
+         "official",
+         "checked",
+         "unverified"
+        ]
+       },
+       "tags": {
+        "default": [],
+        "maxItems": 30,
+        "type": "array",
+        "items": {
+         "type": "string",
+         "maxLength": 60
+        }
+       },
+       "difficulty": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 3
+       },
+       "format": {
+        "type": "string",
+        "const": "match"
+       },
+       "left": {
+        "minItems": 2,
+        "maxItems": 10,
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "id": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 4
+          },
+          "text": {
+           "type": "string",
+           "maxLength": 20000
+          },
+          "image": {
+           "type": "string",
+           "minLength": 1
+          }
+         },
+         "required": [
+          "id"
+         ],
+         "additionalProperties": false
+        }
+       },
+       "right": {
+        "minItems": 2,
+        "maxItems": 12,
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "id": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 4
+          },
+          "text": {
+           "type": "string",
+           "maxLength": 20000
+          },
+          "image": {
+           "type": "string",
+           "minLength": 1
+          }
+         },
+         "required": [
+          "id"
+         ],
+         "additionalProperties": false
+        }
+       },
+       "answer": {
+        "type": "object",
+        "propertyNames": {
+         "type": "string"
+        },
+        "additionalProperties": {
+         "anyOf": [
+          {
+           "type": "string"
+          },
+          {
+           "minItems": 1,
+           "type": "array",
+           "items": {
+            "type": "string"
+           }
+          }
+         ]
+        }
+       }
+      },
+      "required": [
+       "chapter",
+       "format",
+       "left",
+       "right",
+       "answer"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9._:-]+$"
+       },
+       "chapter": {
+        "type": "string",
+        "pattern": "^(phy|chem|math)\\.[a-z0-9-]+$"
+       },
+       "topic": {
+        "type": "string",
+        "maxLength": 160
+       },
+       "stem": {
+        "default": "",
+        "type": "string",
+        "maxLength": 20000
+       },
+       "image": {
+        "type": "string",
+        "minLength": 1
+       },
+       "imageSplit": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "exclusiveMaximum": 1
+       },
+       "passage": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9._:-]+$"
+       },
+       "solution": {
+        "type": "string",
+        "maxLength": 20000
+       },
+       "solutionImage": {
+        "type": "string",
+        "minLength": 1
+       },
+       "source": {
+        "type": "object",
+        "properties": {
+         "exam": {
+          "type": "string",
+          "maxLength": 80
+         },
+         "year": {
+          "type": "integer",
+          "minimum": 1950,
+          "maximum": 2100
+         },
+         "paper": {
+          "type": "string",
+          "maxLength": 120
+         },
+         "qno": {
+          "type": "string",
+          "maxLength": 20
+         },
+         "label": {
+          "type": "string",
+          "maxLength": 200
+         }
+        },
+        "additionalProperties": false
+       },
+       "verified": {
+        "default": "unverified",
+        "type": "string",
+        "enum": [
+         "official",
+         "checked",
+         "unverified"
+        ]
+       },
+       "tags": {
+        "default": [],
+        "maxItems": 30,
+        "type": "array",
+        "items": {
+         "type": "string",
+         "maxLength": 60
+        }
+       },
+       "difficulty": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 3
+       },
+       "format": {
+        "type": "string",
+        "const": "ordering"
+       },
+       "items": {
+        "minItems": 2,
+        "maxItems": 12,
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "id": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 4
+          },
+          "text": {
+           "type": "string",
+           "maxLength": 20000
+          },
+          "image": {
+           "type": "string",
+           "minLength": 1
+          }
+         },
+         "required": [
+          "id"
+         ],
+         "additionalProperties": false
+        }
+       },
+       "answer": {
+        "minItems": 2,
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      },
+      "required": [
+       "chapter",
+       "format",
+       "items",
+       "answer"
+      ],
+      "additionalProperties": false
+     }
+    ]
+   }
+  },
+  "remember": {
+   "type": "array",
+   "items": {
+    "oneOf": [
+     {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9._:-]+$"
+       },
+       "chapter": {
+        "type": "string",
+        "pattern": "^(phy|chem|math)\\.[a-z0-9-]+$"
+       },
+       "topic": {
+        "type": "string",
+        "maxLength": 160
+       },
+       "title": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 300
+       },
+       "source": {
+        "type": "object",
+        "properties": {
+         "exam": {
+          "type": "string",
+          "maxLength": 80
+         },
+         "year": {
+          "type": "integer",
+          "minimum": 1950,
+          "maximum": 2100
+         },
+         "paper": {
+          "type": "string",
+          "maxLength": 120
+         },
+         "qno": {
+          "type": "string",
+          "maxLength": 20
+         },
+         "label": {
+          "type": "string",
+          "maxLength": 200
+         }
+        },
+        "additionalProperties": false
+       },
+       "verified": {
+        "default": "unverified",
+        "type": "string",
+        "enum": [
+         "official",
+         "checked",
+         "unverified"
+        ]
+       },
+       "tags": {
+        "default": [],
+        "maxItems": 30,
+        "type": "array",
+        "items": {
+         "type": "string",
+         "maxLength": 60
+        }
+       },
+       "kind": {
+        "type": "string",
+        "const": "formula"
+       },
+       "latex": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 5000
+       },
+       "condition": {
+        "type": "string",
+        "maxLength": 20000
+       },
+       "where": {
+        "maxItems": 30,
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "symbol": {
+           "type": "string",
+           "maxLength": 60
+          },
+          "meaning": {
+           "type": "string",
+           "maxLength": 200
+          },
+          "unit": {
+           "type": "string",
+           "maxLength": 60
+          }
+         },
+         "required": [
+          "symbol",
+          "meaning"
+         ],
+         "additionalProperties": false
+        }
+       },
+       "note": {
+        "type": "string",
+        "maxLength": 20000
+       }
+      },
+      "required": [
+       "chapter",
+       "title",
+       "kind",
+       "latex"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9._:-]+$"
+       },
+       "chapter": {
+        "type": "string",
+        "pattern": "^(phy|chem|math)\\.[a-z0-9-]+$"
+       },
+       "topic": {
+        "type": "string",
+        "maxLength": 160
+       },
+       "title": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 300
+       },
+       "source": {
+        "type": "object",
+        "properties": {
+         "exam": {
+          "type": "string",
+          "maxLength": 80
+         },
+         "year": {
+          "type": "integer",
+          "minimum": 1950,
+          "maximum": 2100
+         },
+         "paper": {
+          "type": "string",
+          "maxLength": 120
+         },
+         "qno": {
+          "type": "string",
+          "maxLength": 20
+         },
+         "label": {
+          "type": "string",
+          "maxLength": 200
+         }
+        },
+        "additionalProperties": false
+       },
+       "verified": {
+        "default": "unverified",
+        "type": "string",
+        "enum": [
+         "official",
+         "checked",
+         "unverified"
+        ]
+       },
+       "tags": {
+        "default": [],
+        "maxItems": 30,
+        "type": "array",
+        "items": {
+         "type": "string",
+         "maxLength": 60
+        }
+       },
+       "kind": {
+        "type": "string",
+        "const": "note"
+       },
+       "body": {
+        "type": "string",
+        "maxLength": 20000
+       },
+       "image": {
+        "type": "string",
+        "minLength": 1
+       }
+      },
+      "required": [
+       "chapter",
+       "title",
+       "kind",
+       "body"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9._:-]+$"
+       },
+       "chapter": {
+        "type": "string",
+        "pattern": "^(phy|chem|math)\\.[a-z0-9-]+$"
+       },
+       "topic": {
+        "type": "string",
+        "maxLength": 160
+       },
+       "title": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 300
+       },
+       "source": {
+        "type": "object",
+        "properties": {
+         "exam": {
+          "type": "string",
+          "maxLength": 80
+         },
+         "year": {
+          "type": "integer",
+          "minimum": 1950,
+          "maximum": 2100
+         },
+         "paper": {
+          "type": "string",
+          "maxLength": 120
+         },
+         "qno": {
+          "type": "string",
+          "maxLength": 20
+         },
+         "label": {
+          "type": "string",
+          "maxLength": 200
+         }
+        },
+        "additionalProperties": false
+       },
+       "verified": {
+        "default": "unverified",
+        "type": "string",
+        "enum": [
+         "official",
+         "checked",
+         "unverified"
+        ]
+       },
+       "tags": {
+        "default": [],
+        "maxItems": 30,
+        "type": "array",
+        "items": {
+         "type": "string",
+         "maxLength": 60
+        }
+       },
+       "kind": {
+        "type": "string",
+        "const": "table"
+       },
+       "columns": {
+        "minItems": 2,
+        "maxItems": 12,
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "key": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 40
+          },
+          "label": {
+           "type": "string",
+           "minLength": 1,
+           "maxLength": 120
+          },
+          "quiz": {
+           "default": true,
+           "type": "boolean"
+          }
+         },
+         "required": [
+          "key",
+          "label"
+         ],
+         "additionalProperties": false
+        }
+       },
+       "keyColumn": {
+        "type": "string",
+        "minLength": 1
+       },
+       "rows": {
+        "minItems": 2,
+        "maxItems": 200,
+        "type": "array",
+        "items": {
+         "type": "object",
+         "propertyNames": {
+          "type": "string"
+         },
+         "additionalProperties": {
+          "type": "string",
+          "maxLength": 20000
+         }
+        }
+       },
+       "note": {
+        "type": "string",
+        "maxLength": 20000
+       }
+      },
+      "required": [
+       "chapter",
+       "title",
+       "kind",
+       "columns",
+       "keyColumn",
+       "rows"
+      ],
+      "additionalProperties": false
+     },
+     {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[A-Za-z0-9._:-]+$"
+       },
+       "chapter": {
+        "type": "string",
+        "pattern": "^(phy|chem|math)\\.[a-z0-9-]+$"
+       },
+       "topic": {
+        "type": "string",
+        "maxLength": 160
+       },
+       "title": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 300
+       },
+       "source": {
+        "type": "object",
+        "properties": {
+         "exam": {
+          "type": "string",
+          "maxLength": 80
+         },
+         "year": {
+          "type": "integer",
+          "minimum": 1950,
+          "maximum": 2100
+         },
+         "paper": {
+          "type": "string",
+          "maxLength": 120
+         },
+         "qno": {
+          "type": "string",
+          "maxLength": 20
+         },
+         "label": {
+          "type": "string",
+          "maxLength": 200
+         }
+        },
+        "additionalProperties": false
+       },
+       "verified": {
+        "default": "unverified",
+        "type": "string",
+        "enum": [
+         "official",
+         "checked",
+         "unverified"
+        ]
+       },
+       "tags": {
+        "default": [],
+        "maxItems": 30,
+        "type": "array",
+        "items": {
+         "type": "string",
+         "maxLength": 60
+        }
+       },
+       "kind": {
+        "type": "string",
+        "const": "trend"
+       },
+       "property": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+       },
+       "order": {
+        "minItems": 2,
+        "maxItems": 20,
+        "type": "array",
+        "items": {
+         "type": "string",
+         "maxLength": 20000
+        }
+       },
+       "basis": {
+        "type": "string",
+        "maxLength": 20000
+       },
+       "exceptions": {
+        "type": "string",
+        "maxLength": 20000
+       }
+      },
+      "required": [
+       "chapter",
+       "title",
+       "kind",
+       "property",
+       "order"
+      ],
+      "additionalProperties": false
+     }
+    ]
+   }
+  },
+  "papers": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "pattern": "^[A-Za-z0-9._:-]+$"
+     },
+     "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+     },
+     "exam": {
+      "type": "string",
+      "maxLength": 80
+     },
+     "year": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+     },
+     "durationMin": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 600
+     },
+     "scheme": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "string",
+          "maxLength": 60
+         },
+         "name": {
+          "type": "string",
+          "maxLength": 120
+         },
+         "rules": {
+          "type": "object",
+          "propertyNames": {
+           "type": "string",
+           "enum": [
+            "single",
+            "multiple",
+            "integer",
+            "numerical",
+            "assertion",
+            "truefalse",
+            "match",
+            "ordering"
+           ]
+          },
+          "additionalProperties": {
+           "type": "object",
+           "properties": {
+            "correct": {
+             "type": "number"
+            },
+            "wrong": {
+             "type": "number"
+            },
+            "unattempted": {
+             "default": 0,
+             "type": "number"
+            },
+            "partial": {
+             "default": false,
+             "type": "boolean"
+            }
+           },
+           "required": [
+            "correct",
+            "wrong"
+           ],
+           "additionalProperties": false
+          }
+         }
+        },
+        "required": [
+         "name",
+         "rules"
+        ],
+        "additionalProperties": false
+       }
+      ]
+     },
+     "instructions": {
+      "type": "string",
+      "maxLength": 20000
+     },
+     "sections": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "name": {
+         "type": "string",
+         "minLength": 1,
+         "maxLength": 80
+        },
+        "questionIds": {
+         "minItems": 1,
+         "type": "array",
+         "items": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[A-Za-z0-9._:-]+$"
+         }
+        },
+        "scheme": {
+         "anyOf": [
+          {
+           "type": "string"
+          },
+          {
+           "type": "object",
+           "properties": {
+            "id": {
+             "type": "string",
+             "maxLength": 60
+            },
+            "name": {
+             "type": "string",
+             "maxLength": 120
+            },
+            "rules": {
+             "type": "object",
+             "propertyNames": {
+              "type": "string",
+              "enum": [
+               "single",
+               "multiple",
+               "integer",
+               "numerical",
+               "assertion",
+               "truefalse",
+               "match",
+               "ordering"
+              ]
+             },
+             "additionalProperties": {
+              "type": "object",
+              "properties": {
+               "correct": {
+                "type": "number"
+               },
+               "wrong": {
+                "type": "number"
+               },
+               "unattempted": {
+                "default": 0,
+                "type": "number"
+               },
+               "partial": {
+                "default": false,
+                "type": "boolean"
+               }
+              },
+              "required": [
+               "correct",
+               "wrong"
+              ],
+              "additionalProperties": false
+             }
+            }
+           },
+           "required": [
+            "name",
+            "rules"
+           ],
+           "additionalProperties": false
+          }
+         ]
+        }
+       },
+       "required": [
+        "name",
+        "questionIds"
+       ],
+       "additionalProperties": false
+      }
+     }
+    },
+    "required": [
+     "id",
+     "title",
+     "durationMin",
+     "sections"
+    ],
+    "additionalProperties": false
+   }
+  }
+ },
+ "required": [
+  "format",
+  "version",
+  "id",
+  "title",
+  "createdAt"
+ ],
+ "additionalProperties": false
+}
