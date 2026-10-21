@@ -22,7 +22,7 @@ test.beforeEach(async ({ page }) => {
 
 test('home, subjects and every main page fit the screen', async ({ page }) => {
   await page.goto('')
-  await expect(page.getByRole('heading', { name: /Kagaku/ })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: /Kagaku/ })).toBeVisible()
   await expect(page.getByText('days left')).toBeVisible()
   await loadDemo(page)
   for (const path of ['', '#/s/phy', '#/s/chem?unit=physical', '#/c/phy.thermodynamics', '#/c/chem.mole-concept', '#/tests', '#/tests/new', '#/notebooks', '#/search', '#/settings', '#/update']) {
@@ -209,4 +209,15 @@ test('review screen: flagged items come first and leave the queue after a tick',
   await expect(page.getByText('A plane mirror forms a virtual image.')).toBeVisible()
   await page.getByRole('button', { name: 'Looks right' }).click()
   await expect(page.getByText('All caught up')).toBeVisible()
+})
+
+test('download option: right steps for the device, and Home card can be dismissed', async ({ page }, info) => {
+  await page.goto('#/settings')
+  const steps = page.locator('#install')
+  if (info.project.name.startsWith('ipad')) await expect(steps).toContainText('Add to Home Screen')
+  else await expect(steps).toContainText('Install app')
+  await page.goto('')
+  await expect(page.getByText('Download Kagaku on this device')).toBeVisible()
+  await page.getByRole('button', { name: 'Not now' }).click()
+  await expect(page.getByText('Download Kagaku on this device')).toHaveCount(0)
 })

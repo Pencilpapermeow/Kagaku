@@ -2,9 +2,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Atom, CalendarClock, ChevronRight, ClipboardPlus, Download, Flame, FlaskConical, NotebookPen, ShieldCheck, Sigma, Target } from 'lucide-react'
 import { SUBJECTS, type SubjectId } from '../content/syllabus'
 import { subjectTotals, useChapterStats, useChapters, useContentCounts, useToday } from '../db/queries'
-import { useSettings } from '../db/settings'
+import { setSetting, useSettings } from '../db/settings'
 import { Bar, Button, Ring } from '../ui/kit'
 import { Logo } from '../ui/Logo'
+import { InstallHelp, isInstalled } from '../ui/install'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { reviewCounts } from '../engine/review'
@@ -60,6 +61,20 @@ export function HomePage() {
           <span>It's been a week since your last backup. Progress lives only on this device — back it up.</span>
           <ChevronRight size={18} />
         </Link>
+      )}
+
+      {!settings.installHintDismissed && !isInstalled() && (
+        <section className="card install-card">
+          <div className="row between">
+            <h2 className="card-title">
+              <Download size={20} /> Download Kagaku on this device
+            </h2>
+            <Button size="sm" variant="ghost" onClick={() => setSetting('installHintDismissed', true)}>
+              Not now
+            </Button>
+          </div>
+          <InstallHelp compact />
+        </section>
       )}
 
       {review.care > 0 && (

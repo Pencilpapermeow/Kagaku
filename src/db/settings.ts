@@ -16,6 +16,8 @@ export interface Settings {
   /** Chance that practice swaps the correct option for "None of these". */
   noneOfTheseRate: number
   practiceSize: number
+  /** He tapped "Not now" on the Home install card. */
+  installHintDismissed: boolean
   lastBackupAt: number
   installedAt: number
 }
@@ -32,6 +34,7 @@ export const DEFAULT_SETTINGS: Settings = {
   graduateAfter: 3,
   noneOfTheseRate: 0.12,
   practiceSize: 20,
+  installHintDismissed: false,
   lastBackupAt: 0,
   installedAt: 0,
 }

@@ -5,6 +5,7 @@ import { setSetting, useSettings, type Settings } from '../db/settings'
 import { downloadBackup, restoreBackup } from '../db/backup'
 import { fetchIndex } from '../content/sync'
 import { Button, Field, TopBar, toast } from '../ui/kit'
+import { InstallHelp } from '../ui/install'
 
 function useDraft<K extends keyof Settings>(key: K) {
   const settings = useSettings()
@@ -30,6 +31,13 @@ export function SettingsPage() {
   return (
     <div className="settings">
       <TopBar title="Settings" back={false} right={<Link to="/update" className="icon-btn" aria-label="Update Center"><PackagePlus size={20} /></Link>} />
+
+      <section className="card" id="install">
+        <h2 className="card-title">
+          <Download size={18} /> Download the app
+        </h2>
+        <InstallHelp />
+      </section>
 
       <section className="card">
         <h2 className="card-title">Look</h2>

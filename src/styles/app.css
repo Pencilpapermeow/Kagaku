@@ -2130,6 +2130,34 @@ button.card {
   padding: 12px 14px;
 }
 
+/* install */
+.install {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+.install-steps {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+  font-size: 0.92rem;
+}
+.inline-icon {
+  vertical-align: -3px;
+}
+.install-done {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.install-card {
+  border-color: color-mix(in srgb, var(--cyan) 40%, transparent);
+}
+.install-card .card-title {
+  margin: 0;
+}
+
 /* review */
 .review-link {
   display: flex !important;

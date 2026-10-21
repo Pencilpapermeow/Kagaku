@@ -23,6 +23,7 @@ Features need a paid, capable AI; content can keep coming after 10 Nov through t
 - [x] Uttam's chapter list in the registry with his numbers 1–95
 - [x] Mixed form only (text + LaTeX + diagram crops); photo-form questions are refused; tools extract diagrams separately
 - [x] Review screen (accuracy layer 4): every new item waits for his tick; flagged/AI-solved first
+- [x] "Download app" option: one-tap install on Android Chrome, Add to Home Screen steps on iPad (Home card + Settings)
 
 ## Waiting on Uttam
 
