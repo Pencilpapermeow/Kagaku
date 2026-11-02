@@ -131,7 +131,7 @@ export function HomePage() {
                   <p className="muted small">
                     {nCh} chapters · {t.done}/{t.total} Qs
                   </p>
-                  <Bar value={t.done} max={t.total} color={SUBJECT_COLOR[s.id]} />
+                  <Bar value={t.done} max={t.total} />
                 </div>
                 <ChevronRight size={20} className="muted" />
               </Link>

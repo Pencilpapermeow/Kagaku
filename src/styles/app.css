@@ -19,8 +19,7 @@ body {
   -webkit-tap-highlight-color: transparent;
   overflow-x: hidden;
 }
-:root[data-theme='dark'] body,
-:root:not([data-theme]) body {
+:root[data-theme='dark'] body {
   background:
     radial-gradient(1200px 600px at 100% -10%, rgba(255, 255, 255, 0.05), transparent 60%),
     radial-gradient(900px 500px at -10% 110%, rgba(255, 255, 255, 0.03), transparent 60%),
@@ -172,46 +171,74 @@ img {
 }
 .nav-item.active {
   color: var(--accent);
+  font-weight: 700;
 }
-.nav-item.active svg {
-  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 60%, transparent));
+.appbar {
+  display: none;
 }
 
 @media (min-width: 900px) {
-  .rail {
+  .appbar {
+    display: flex;
+    position: fixed;
+    z-index: 45;
     top: 0;
+    left: 0;
+    right: 0;
+    height: var(--appbar-h);
+    align-items: center;
+    gap: 12px;
+    padding: 0 24px;
+    background: var(--appbar);
+    color: var(--appbar-ink);
+  }
+  .appbar b {
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+  .appbar .appbar-hi {
+    margin-left: auto;
+    font-weight: 600;
+    opacity: 0.92;
+  }
+  .rail {
+    top: var(--appbar-h);
     right: auto;
-    width: 220px;
+    width: 240px;
     height: auto;
     flex-direction: column;
     justify-content: flex-start;
-    padding: 20px 12px;
-    gap: 4px;
+    padding: 16px 0;
+    gap: 2px;
     border-top: 0;
     border-right: 1px solid var(--line-soft);
+    background: var(--bg-2);
   }
   .rail-logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 800;
-    font-size: 1.2rem;
-    padding: 4px 10px 20px;
+    display: none;
   }
   .nav-item {
     flex: 0 0 auto;
     flex-direction: row;
     justify-content: flex-start;
-    gap: 12px;
-    font-size: 0.95rem;
-    padding: 10px 12px;
-    border-radius: 12px;
+    gap: 14px;
+    font-size: 1rem;
+    padding: 14px 24px;
+    color: var(--text);
+  }
+  .nav-item svg {
+    color: var(--text-2);
   }
   .nav-item.active {
     background: var(--accent-soft);
+    box-shadow: inset 4px 0 0 var(--accent);
+  }
+  .nav-item.active svg {
+    color: var(--accent);
   }
   .page {
-    margin-left: 220px;
+    margin-top: var(--appbar-h);
+    margin-left: 240px;
     margin-right: 0;
     max-width: none;
     padding: 20px 32px 40px;
@@ -267,7 +294,7 @@ img {
 .tabs {
   display: flex;
   gap: 4px;
-  padding: 4px;
+  padding: 0 4px;
   margin: 4px 0 14px;
   background: var(--surface);
   border: 1px solid var(--line-soft);
@@ -282,8 +309,8 @@ img {
   flex: 1 0 auto;
   border: 0;
   background: none;
-  padding: 0.55rem 0.9rem;
-  border-radius: 10px;
+  padding: 0.8rem 0.9rem;
+  border-radius: 0;
   color: var(--text-3);
   font-weight: 600;
   font-size: 0.92rem;
@@ -295,12 +322,11 @@ img {
   gap: 6px;
 }
 .tab.active {
-  background: var(--accent-soft);
   color: var(--accent);
+  box-shadow: inset 0 -3px 0 var(--accent);
 }
 .tabs-subject .tab.active {
-  color: var(--tint);
-  background: color-mix(in srgb, var(--tint) 16%, transparent);
+  color: var(--accent);
 }
 .tab-badge {
   font-size: 0.7rem;
@@ -413,9 +439,9 @@ img {
   width: 100%;
 }
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, var(--cyan)));
-  color: var(--accent-ink);
-  box-shadow: 0 6px 18px var(--accent-shadow);
+  background: var(--primary);
+  color: var(--primary-ink);
+  box-shadow: 0 4px 12px var(--accent-shadow);
 }
 .btn-soft {
   background: var(--surface-2);
@@ -501,9 +527,7 @@ button.card {
   flex: none;
   border-radius: 14px;
   color: var(--tint, var(--accent));
-  background: color-mix(in srgb, var(--tint, var(--accent)) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--tint, var(--accent)) 45%, transparent);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--tint, var(--accent)) 25%, transparent);
+  background: color-mix(in srgb, var(--tint, var(--accent)) 11%, var(--surface));
 }
 .tile.tone-accent {
   --tint: var(--accent);
@@ -522,7 +546,7 @@ button.card {
 .bar-fill {
   height: 100%;
   border-radius: 99px;
-  background: var(--accent);
+  background: var(--good);
   transition: width 0.5s ease;
 }
 .ring {
@@ -2334,4 +2358,10 @@ details.solution[open] > summary {
   flex: none;
   border-radius: 24%;
   box-shadow: 0 0 0 1px var(--line);
+}
+@media (min-width: 900px) {
+  /* The black header already shows the logo. */
+  .home-brand .logo-mark {
+    display: none;
+  }
 }

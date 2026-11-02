@@ -25,7 +25,7 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  theme: 'dark',
+  theme: 'light',
   dailyGoal: 40,
   examDate: '2027-05-23',
   examName: 'JEE Advanced 2027',

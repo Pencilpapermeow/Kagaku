@@ -14,6 +14,11 @@ const NAV = [
 export function Shell() {
   return (
     <div className="shell">
+      <header className="appbar">
+        <Logo size={36} />
+        <b>Kagaku</b>
+        <span className="appbar-hi">Hi, Uttam</span>
+      </header>
       <nav className="rail" aria-label="Main">
         <div className="rail-logo">
           <Logo size={34} />

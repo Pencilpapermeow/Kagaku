@@ -66,7 +66,7 @@ export function SubjectPage() {
                   <span className="muted small">
                     {unitName} · Class {c.cls} · {st?.remember ?? 0} to remember
                   </span>
-                  <Bar value={st?.done ?? 0} max={st?.total ?? 0} color="var(--tint)" />
+                  <Bar value={st?.done ?? 0} max={st?.total ?? 0} />
                 </span>
                 <span className="chapter-side">
                   <span className="count">

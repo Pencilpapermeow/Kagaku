@@ -10,7 +10,7 @@ import { getSetting, setSetting } from './db/settings'
 
 async function boot() {
   // Apply the theme before first paint of the app to avoid a flash.
-  const theme = await getSetting('theme').catch(() => 'dark' as const)
+  const theme = await getSetting('theme').catch(() => 'light' as const)
   document.documentElement.dataset.theme = theme
   if (!(await getSetting('installedAt').catch(() => 1))) await setSetting('installedAt', Date.now()).catch(() => {})
   createRoot(document.getElementById('root')!).render(

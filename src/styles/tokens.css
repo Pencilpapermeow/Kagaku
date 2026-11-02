@@ -1,9 +1,70 @@
+/*
+  Look: like the PW (Physics Wallah) web app — white and light-grey pages, black header and
+  buttons, grey lines, purple only for what is selected. Matches the pencil-cat icon.
+  Light is the default; the dark (graphite) theme is in Settings.
+*/
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   --font: 'Plus Jakarta Sans Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --mono: 'JetBrains Mono Variable', ui-monospace, monospace;
 
-  /* Pencil and paper: graphite greys, white and black (to match his pencil-cat icon). */
+  --bg: #f7f7f9;
+  --bg-2: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f4f4f7;
+  --surface-3: #ebebf0;
+  --line: #dcdce3;
+  --line-soft: #e8e8ee;
+  --text: #1b1b1f;
+  --text-2: #4a4a54;
+  --text-3: #7c7c87;
+
+  /* Purple = selected (active tab, menu item, chosen option), as on PW. */
+  --accent: #5a4bda;
+  --accent-2: #7b6ef0;
+  --accent-ink: #ffffff;
+  --accent-soft: #ebe8fd;
+  --accent-shadow: rgba(0, 0, 0, 0.12);
+  /* Black = main buttons ("Resume" on PW). */
+  --primary: #1b1b1f;
+  --primary-ink: #ffffff;
+  /* The black header bar on iPad. */
+  --appbar: #1c1d26;
+  --appbar-ink: #ffffff;
+
+  --cyan: #3b7ddd;
+  --pink: #d9467a;
+  --good: #1fa463;
+  --good-soft: rgba(31, 164, 99, 0.1);
+  --bad: #e0453f;
+  --bad-soft: rgba(224, 69, 63, 0.08);
+  --warn: #c98a12;
+  --warn-soft: rgba(214, 158, 46, 0.12);
+
+  /* Subjects: the PW blue chip ("Ph", "Ma") for all three. */
+  --phy: #3b6fd4;
+  --chem: #3b6fd4;
+  --math: #3b6fd4;
+
+  /* NTA palette (kept as in the real exam) */
+  --nta-notvisited: #d9d9df;
+  --nta-notanswered: #e5484d;
+  --nta-answered: #2fa36b;
+  --nta-marked: #7c4ddb;
+
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-lg: 22px;
+  --shadow: 0 1px 3px rgba(20, 20, 40, 0.06);
+  --glow: 0 0 0 1px rgba(90, 75, 218, 0.25), 0 6px 18px rgba(20, 20, 40, 0.08);
+  --nav-h: 64px;
+  --appbar-h: 64px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+
+/* Night: graphite greys, white and black. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
   --bg: #0e0e0f;
   --bg-2: #141415;
   --surface: #1a1a1c;
@@ -15,15 +76,18 @@
   --text-2: #bfbfbc;
   --text-3: #8a8a87;
 
-  --accent: #ececea;
-  --accent-2: #bdbdba;
+  --accent: #a99ff7;
+  --accent-2: #c4bdfa;
   --accent-ink: #111112;
-  --accent-soft: rgba(255, 255, 255, 0.1);
+  --accent-soft: rgba(169, 159, 247, 0.14);
   --accent-shadow: rgba(0, 0, 0, 0.45);
-  /* Two more greys where the old theme used cyan and pink. */
-  --cyan: #a3a3a0;
-  --pink: #d6d6d3;
-  /* Right / wrong / careful keep their colour: they must read at a glance. */
+  --primary: #ececea;
+  --primary-ink: #111112;
+  --appbar: #000000;
+  --appbar-ink: #f3f3f1;
+
+  --cyan: #7aa7ee;
+  --pink: #e47aa0;
   --good: #4fbf86;
   --good-soft: rgba(79, 191, 134, 0.14);
   --bad: #e5736f;
@@ -31,59 +95,11 @@
   --warn: #d8a843;
   --warn-soft: rgba(216, 168, 67, 0.13);
 
-  /* Subjects: three shades of graphite. */
-  --phy: #e6e6e3;
-  --chem: #b3b3b0;
-  --math: #85857f;
+  --phy: #7aa2ee;
+  --chem: #7aa2ee;
+  --math: #7aa2ee;
 
-  /* NTA palette (kept as in the real exam) */
   --nta-notvisited: #3d3d41;
-  --nta-notanswered: #e5484d;
-  --nta-answered: #2fa36b;
-  --nta-marked: #7c4ddb;
-
-  --radius: 16px;
-  --radius-sm: 10px;
-  --radius-lg: 22px;
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  --glow: 0 0 0 1px rgba(255, 255, 255, 0.28), 0 8px 28px rgba(0, 0, 0, 0.5);
-  --nav-h: 64px;
-  --safe-b: env(safe-area-inset-bottom, 0px);
-}
-
-:root[data-theme='light'] {
-  color-scheme: light;
-  /* The paper itself: white, with pencil-grey text. */
-  --bg: #f4f4f2;
-  --bg-2: #ebebe8;
-  --surface: #ffffff;
-  --surface-2: #f6f6f4;
-  --surface-3: #eaeae7;
-  --line: #d5d5d1;
-  --line-soft: #e6e6e2;
-  --text: #161617;
-  --text-2: #4a4a48;
-  --text-3: #7b7b78;
-
-  --accent: #1d1d1f;
-  --accent-2: #4a4a48;
-  --accent-ink: #ffffff;
-  --accent-soft: rgba(0, 0, 0, 0.07);
-  --accent-shadow: rgba(0, 0, 0, 0.18);
-  --cyan: #6e6e6b;
-  --pink: #3d3d3b;
-  --good: #16a36a;
-  --good-soft: rgba(22, 163, 106, 0.1);
-  --bad: #d13f3b;
-  --bad-soft: rgba(209, 63, 59, 0.08);
-  --warn: #b7791f;
-  --warn-soft: rgba(214, 158, 46, 0.12);
-
-  --phy: #2a2a2b;
-  --chem: #5c5c5a;
-  --math: #8d8d89;
-
-  --nta-notvisited: #d9d9d6;
-  --shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
-  --glow: 0 0 0 1px rgba(0, 0, 0, 0.18), 0 8px 24px rgba(0, 0, 0, 0.08);
+  --glow: 0 0 0 1px rgba(255, 255, 255, 0.22), 0 8px 28px rgba(0, 0, 0, 0.5);
 }

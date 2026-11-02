@@ -159,6 +159,9 @@ test('custom test builder creates a CBT test', async ({ page }) => {
 
 test('settings: theme switch and backup download', async ({ page }) => {
   await page.goto('#/settings')
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+  await page.getByRole('button', { name: 'Dark' }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
   await page.getByRole('button', { name: 'Light' }).click()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
   const download = page.waitForEvent('download')
