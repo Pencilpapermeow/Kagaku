@@ -4,6 +4,8 @@ import { chromium } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 
 const svg = readFileSync(new URL('../../public/icon.svg', import.meta.url), 'utf8')
+// Background behind the art where an icon must be opaque (maskable, iOS): the paper white.
+const BG = '#ffffff'
 const out = (f) => new URL(`../../public/${f}`, import.meta.url).pathname
 const browser = await chromium.launch({ executablePath: process.env.KAGAKU_CHROMIUM || undefined })
 const page = await browser.newPage()
@@ -12,7 +14,7 @@ async function render(size, file, { maskable = false, opaque = maskable } = {}) 
   // Maskable icons need the artwork inside the central 80% safe zone.
   const inner = maskable ? Math.round(size * 0.8) : size
   await page.setContent(
-    `<html><body style="margin:0;background:${opaque ? '#0a0f1f' : 'transparent'};display:grid;place-items:center;width:${size}px;height:${size}px">` +
+    `<html><body style="margin:0;background:${opaque ? BG : 'transparent'};display:grid;place-items:center;width:${size}px;height:${size}px">` +
       svg.replace('<svg ', `<svg width="${inner}" height="${inner}" `) +
       '</body></html>',
   )
