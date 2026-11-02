@@ -20,7 +20,7 @@ function ThemeSync() {
   const { theme } = useSettings()
   useEffect(() => {
     document.documentElement.dataset.theme = theme
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#f5f5fb' : '#0a0f1f')
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#f4f4f2' : '#0e0e0f')
   }, [theme])
   return null
 }

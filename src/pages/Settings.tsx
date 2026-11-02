@@ -172,7 +172,7 @@ export function SettingsPage() {
       </section>
 
       <p className="muted small pad center">
-        Kagaku {__APP_VERSION__} · made for Uttam's JA 2027 · 科学 = science
+        Kagaku {__APP_VERSION__} · made for Uttam's JA 2027
       </p>
     </div>
   )

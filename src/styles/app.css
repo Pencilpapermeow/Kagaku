@@ -22,8 +22,8 @@ body {
 :root[data-theme='dark'] body,
 :root:not([data-theme]) body {
   background:
-    radial-gradient(1200px 600px at 100% -10%, rgba(139, 123, 255, 0.12), transparent 60%),
-    radial-gradient(900px 500px at -10% 110%, rgba(47, 212, 245, 0.07), transparent 60%),
+    radial-gradient(1200px 600px at 100% -10%, rgba(255, 255, 255, 0.05), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(255, 255, 255, 0.03), transparent 60%),
     var(--bg);
   background-attachment: fixed;
 }
@@ -415,7 +415,7 @@ img {
 .btn-primary {
   background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, var(--cyan)));
   color: var(--accent-ink);
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 35%, transparent);
+  box-shadow: 0 6px 18px var(--accent-shadow);
 }
 .btn-soft {
   background: var(--surface-2);
@@ -801,12 +801,6 @@ button.card {
   font-size: 1.6rem;
   font-weight: 800;
 }
-.home-brand .kanji {
-  font-size: 1rem;
-  color: var(--accent);
-  margin-left: 4px;
-  font-weight: 600;
-}
 .home-top {
   display: grid;
   gap: 12px;
@@ -838,8 +832,8 @@ button.card {
   color: var(--text-3);
 }
 .flame.on {
-  color: #ff8a3d;
-  filter: drop-shadow(0 0 6px rgba(255, 138, 61, 0.7));
+  color: var(--text);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--text) 55%, transparent));
 }
 .countdown-card {
   margin: 0;
@@ -1422,7 +1416,7 @@ button.card {
   justify-content: flex-end;
 }
 .combo.hot {
-  color: #ff8a3d;
+  color: var(--text);
   animation: pulse 1s infinite;
 }
 .pcard {
@@ -2292,16 +2286,16 @@ button.card {
   transform: scale(1.15);
 }
 .lv-2 {
-  background: color-mix(in srgb, var(--cyan) 16%, transparent);
-  color: var(--cyan);
+  background: var(--surface-3);
+  color: var(--text);
 }
 .lv-3 {
-  background: color-mix(in srgb, var(--pink) 16%, transparent);
-  color: var(--pink);
+  background: var(--text-2);
+  color: var(--bg);
 }
 .lv-4 {
-  background: color-mix(in srgb, #ff8a3d 18%, transparent);
-  color: #ff8a3d;
+  background: var(--text);
+  color: var(--bg);
   animation: pulse 1.6s infinite;
 }
 .right-answer {
@@ -2333,4 +2327,11 @@ details.solution[open] > summary {
 }
 .again-note {
   margin: 8px 0 0;
+}
+
+.logo-mark {
+  display: block;
+  flex: none;
+  border-radius: 24%;
+  box-shadow: 0 0 0 1px var(--line);
 }

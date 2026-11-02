@@ -33,8 +33,8 @@ export default defineConfig({
         lang: 'en',
         display: 'standalone',
         orientation: 'any',
-        background_color: '#0b1020',
-        theme_color: '#0b1020',
+        background_color: '#0e0e0f',
+        theme_color: '#0e0e0f',
         start_url: '.',
         scope: '.',
         icons: [

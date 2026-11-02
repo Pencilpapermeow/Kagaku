@@ -46,7 +46,7 @@ export function HomePage() {
           <div>
             <p className="muted">{greeting()}, Uttam</p>
             <h1>
-              Kagaku <span className="kanji">科学</span>
+              Kagaku
             </h1>
           </div>
         </div>
