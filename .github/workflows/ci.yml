@@ -15,7 +15,8 @@ concurrency:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest became 26.04 in Oct 2026, which Playwright 1.56 cannot install browsers on.
+    runs-on: ubuntu-24.04
     env:
       KAGAKU_BASE: /${{ github.event.repository.name }}/
     steps:
@@ -49,7 +50,8 @@ jobs:
   deploy:
     needs: check
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest became 26.04 in Oct 2026, which Playwright 1.56 cannot install browsers on.
+    runs-on: ubuntu-24.04
     permissions:
       pages: write
       id-token: write
