@@ -2260,3 +2260,77 @@ button.card {
     transition: none !important;
   }
 }
+
+/* ============ adaptive level (To Remember practice) ============ */
+.lv {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0.18rem 0.55rem;
+  border-radius: 99px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+.lv b {
+  font-weight: 800;
+}
+.lv i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  opacity: 0.6;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+.lv i.on {
+  background: currentColor;
+  opacity: 1;
+  transform: scale(1.15);
+}
+.lv-2 {
+  background: color-mix(in srgb, var(--cyan) 16%, transparent);
+  color: var(--cyan);
+}
+.lv-3 {
+  background: color-mix(in srgb, var(--pink) 16%, transparent);
+  color: var(--pink);
+}
+.lv-4 {
+  background: color-mix(in srgb, #ff8a3d 18%, transparent);
+  color: #ff8a3d;
+  animation: pulse 1.6s infinite;
+}
+.right-answer {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--good-soft);
+  border: 1px solid color-mix(in srgb, var(--good) 35%, transparent);
+}
+.right-answer > .muted,
+.solution > .muted {
+  display: block;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.7rem;
+  margin-bottom: 2px;
+}
+details.solution > summary {
+  cursor: pointer;
+  list-style: none;
+  font-weight: 700;
+}
+details.solution > summary::-webkit-details-marker {
+  display: none;
+}
+details.solution[open] > summary {
+  margin-bottom: 4px;
+}
+.again-note {
+  margin: 8px 0 0;
+}

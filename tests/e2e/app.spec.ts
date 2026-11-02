@@ -9,6 +9,17 @@ async function loadDemo(page: Page) {
   await expect(page.getByRole('button', { name: 'Remove Demo pack (try every screen)' })).toBeVisible()
 }
 
+/** Answers a generated "arrange in order" question from the two demo trends correctly. */
+async function answerOrdering(page: Page) {
+  await expect(page.locator('.stem-text')).toContainText('Arrange in')
+  const stem = await page.locator('.stem-text').innerText()
+  // Two demo trends exist; the session may start with either. Harder levels use only part of a trend.
+  const order = stem.includes('electronegativity') ? ['I', 'Br', 'Cl', 'F'] : ['Li', 'B', 'Be', 'C', 'O', 'N', 'F', 'Ne']
+  const shown = (await page.locator('.order-pool .order-chip').allInnerTexts()).map((t) => t.trim())
+  const seq = order.filter((el) => shown.includes(el))
+  for (const el of stem.includes('decreasing') ? seq.reverse() : seq) await page.locator('.order-pool .order-chip', { hasText: new RegExp(`^${el}$`) }).first().click()
+}
+
 async function noSideScroll(page: Page) {
   const { sw, w } = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, w: window.innerWidth }))
   expect(sw, 'page must not scroll sideways').toBeLessThanOrEqual(w + 1)
@@ -74,11 +85,7 @@ test('practice works for match, ordering and numerical inputs', async ({ page })
   await expect(page.locator('.feedback.good')).toBeVisible()
 
   await page.goto('#/practice?c=chem.periodicity&m=generated&f=ordering')
-  await expect(page.locator('.stem-text')).toContainText('Arrange in')
-  const stem = await page.locator('.stem-text').innerText()
-  // Two demo trends exist; the session may start with either.
-  const order = stem.includes('electronegativity') ? ['I', 'Br', 'Cl', 'F'] : ['Li', 'B', 'Be', 'C', 'O', 'N', 'F', 'Ne']
-  for (const el of stem.includes('decreasing') ? [...order].reverse() : order) await page.locator('.order-pool .order-chip', { hasText: new RegExp(`^${el}$`) }).first().click()
+  await answerOrdering(page)
   await page.getByRole('button', { name: 'Check' }).click()
   await expect(page.locator('.feedback.good')).toBeVisible()
 
@@ -86,6 +93,37 @@ test('practice works for match, ordering and numerical inputs', async ({ page })
   await page.getByLabel('Your answer').fill('2.5')
   await page.getByRole('button', { name: 'Check' }).click()
   await expect(page.locator('.feedback')).toBeVisible()
+})
+
+test('To Remember practice: 2 right in a row raises the level; a miss shows the answer and why', async ({ page }) => {
+  await loadDemo(page)
+  await page.goto('#/practice?c=chem.periodicity&m=generated&f=ordering')
+  await expect(page.locator('.phead .lv')).toContainText('Lv 1')
+  await answerOrdering(page)
+  await page.getByRole('button', { name: 'Check' }).click()
+  await expect(page.locator('.feedback.good')).toBeVisible()
+  await expect(page.locator('.phead .lv i.on')).toHaveCount(1)
+  await page.getByRole('button', { name: /Next|Finish/ }).click()
+  await answerOrdering(page)
+  await page.getByRole('button', { name: 'Check' }).click()
+  await expect(page.locator('.feedback.good')).toBeVisible()
+  await expect(page.getByText(/Level 2 · Tricky/)).toBeVisible()
+  await expect(page.locator('.phead .lv')).toContainText('Lv 2')
+  await page.getByRole('button', { name: /Next|Finish/ }).click()
+  await expect(page.locator('.stat-value', { hasText: '2 · Tricky' })).toBeVisible()
+
+  // The level is remembered for the chapter.
+  await page.goto('#/c/chem.periodicity?tab=practice')
+  await expect(page.getByText(/Lv 2 Tricky/)).toBeVisible()
+
+  // A skipped (or wrong) answer shows the right answer and the reason, and promises a repeat.
+  await page.goto('#/practice?c=chem.periodicity&m=generated')
+  await expect(page.locator('.pcard')).toBeVisible()
+  await page.getByRole('button', { name: 'Skip' }).click()
+  await expect(page.locator('.feedback .right-answer')).toBeVisible()
+  await expect(page.locator('.feedback .solution')).toBeVisible()
+  await expect(page.getByText('This will come back in a few questions')).toBeVisible()
+  await noSideScroll(page)
 })
 
 test('CBT: NTA palette, save & next, submit and analysis', async ({ page }) => {

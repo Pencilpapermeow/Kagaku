@@ -138,6 +138,50 @@ export const ASSERTION_TEXT: Record<(typeof ASSERTION_CODES)[number], string> = 
   neither: 'Both A and R are false',
 }
 
+/**
+ * The correct answer in words, as rich text, for the feedback after a wrong answer:
+ * "B. Sulphate", "A. … ; C. …", "P → 2 (SO₄²⁻)". Option letters follow the order shown.
+ */
+export function answerInWords(q: Question, fixed?: unknown): string {
+  const a = effectiveAnswer(q, fixed)
+  const letter = (i: number) => 'ABCDEFGHIJKL'[i] ?? String(i + 1)
+  switch (q.format) {
+    case 'single':
+    case 'multiple': {
+      const ids = Array.isArray(a) ? (a as string[]) : [a as string]
+      const at = (id: string) => q.options.findIndex((o) => o.id === id)
+      return [...ids]
+        .sort((x, y) => at(x) - at(y))
+        .map((id) => {
+          const i = q.options.findIndex((o) => o.id === id)
+          const o = q.options[i]
+          return i < 0 ? id : o.text ? `${letter(i)}. ${o.text}` : letter(i)
+        })
+        .join('\n')
+    }
+    case 'integer':
+    case 'numerical':
+      return String(a)
+    case 'truefalse':
+      return a ? 'True' : 'False'
+    case 'assertion':
+      return ASSERTION_TEXT[a as (typeof ASSERTION_CODES)[number]]
+    case 'match':
+      return Object.entries(a as Record<string, string | string[]>)
+        .map(([l, rr]) => {
+          const left = q.left.find((x) => x.id === l)?.text
+          const right = (Array.isArray(rr) ? rr : [rr]).map((id) => {
+            const t = q.right.find((x) => x.id === id)?.text
+            return t ? `${id} (${t})` : id
+          })
+          return `${l}${left ? ` ${left}` : ''} → ${right.join(', ')}`
+        })
+        .join('\n')
+    case 'ordering':
+      return (a as string[]).map((id) => q.items.find((i) => i.id === id)?.text ?? id).join(' → ')
+  }
+}
+
 /** The correct answer written out for the result screen. */
 export function describeAnswer(q: Question, fixed?: unknown): string {
   const a = effectiveAnswer(q, fixed)

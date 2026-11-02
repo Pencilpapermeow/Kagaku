@@ -22,7 +22,9 @@ export function ReviewPage() {
   const chapters = useChapters()
   const queue = useLiveQuery(() => reviewQueue(filter), [filter])
   const total = useLiveQuery(async () => (await reviewQueue('all')).length, [], 0)
-  useEffect(() => setSkipped([]), [filter])
+  useEffect(() => {
+    setSkipped([])
+  }, [filter])
 
   const idOf = (i: ReviewItem) => (i.kind === 'question' ? i.q.id : i.r.id)
   const rest = queue?.filter((i) => !skipped.includes(idOf(i))) ?? []

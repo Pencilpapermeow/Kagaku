@@ -27,7 +27,10 @@ function ThemeSync() {
 
 function ScrollTop() {
   const { pathname } = useLocation()
-  useEffect(() => window.scrollTo(0, 0), [pathname])
+  // Braces matter: newer browsers make scrollTo return a Promise, and an effect must not return one.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
   return null
 }
 

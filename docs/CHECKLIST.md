@@ -25,6 +25,14 @@ Features need a paid, capable AI; content can keep coming after 10 Nov through t
 - [x] Review screen (accuracy layer 4): every new item waits for his tick; flagged/AI-solved first
 - [x] "Download app" option: one-tap install on Android Chrome, Add to Home Screen steps on iPad (Home card + Settings)
 
+## Done (3 Nov)
+
+- [x] To Remember practice made adaptive: 4 levels (Warm-up → Tricky → JA mode → Boss); 2 right in a row → level up, 2 wrong → down; level saved per chapter
+- [x] Look-alike wrong options (SO₄²⁻/SO₃²⁻, Z 26/27, stannous/stannic); questions that print their own answer (ion charge) are dropped
+- [x] Multiple-correct from To Remember: "which of these have…", "which statements about X are correct", "correctly matched pairs", "which comparisons are correct"; also typed numbers, two-step recall, correct-order MCQ
+- [x] After a wrong/skipped answer: correct answer in words + explanation from the source row/trend; the missed fact comes back 3–5 questions later in another form
+- [x] Fixed a crash on newer Chrome: `window.scrollTo` now returns a Promise, which an effect must not return (App, Review, Settings)
+
 ## Waiting on Uttam
 
 - [ ] Install the Claude GitHub App on both repos (push to `Kagaku` was refused on 21 Oct)

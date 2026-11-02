@@ -53,3 +53,26 @@ describe('answer checking', () => {
     expect(check(q, { kind: 'bool', value: false }, false).correct).toBe(true)
   })
 })
+
+describe('answer in words', () => {
+  it('names the right options by the letters shown, in order', async () => {
+    const { answerInWords } = await import('./marking')
+    const q = {
+      id: 'm',
+      chapter: 'chem.mole-concept',
+      format: 'multiple',
+      stem: 's',
+      options: [
+        { id: 'x', text: 'Sulphate' },
+        { id: 'y', text: 'Sulphite' },
+        { id: 'z', text: 'Nitrate' },
+      ],
+      answer: ['z', 'x'],
+      verified: 'checked',
+      tags: [],
+    } as const
+    expect(answerInWords(q as never)).toBe('A. Sulphate\nC. Nitrate')
+    const tf = { id: 't', chapter: 'chem.mole-concept', format: 'truefalse', stem: 's', answer: false, verified: 'checked', tags: [] } as const
+    expect(answerInWords(tf as never)).toBe('False')
+  })
+})

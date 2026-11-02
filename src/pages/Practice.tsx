@@ -1,15 +1,17 @@
 // Practice: the cute, light mood. Big option cards, small animations, a combo streak.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Bookmark, BookmarkCheck, Flag, Flame, PartyPopper, RotateCcw, ShieldCheck, X } from 'lucide-react'
 import { db, GALTI_REASONS, GALTI_REASON_LABEL, type GaltiReason } from '../db/db'
-import { useSettings } from '../db/settings'
+import { getSetting, setSetting, useSettings } from '../db/settings'
 import { useChapters } from '../db/queries'
 import { FORMAT_LABEL, type Question, type QuestionFormat } from '../content/schema'
-import { check, isEmpty, type Response, type Verdict } from '../engine/marking'
-import { buildPractice, type PracticeMode } from '../engine/session'
+import { answerInWords, check, isEmpty, type Response, type Verdict } from '../engine/marking'
+import { buildSlots, type PracticeMode } from '../engine/session'
+import { LEVEL_UP_AFTER, levelKey, materialize, repeatOf, repeatPosition, startLevel, stepLevel, type LevelState, type Slot } from '../engine/adaptive'
+import { clampLevel, LEVEL_NAME, levelOf, MAX_LEVEL, type Level } from '../engine/generate'
 import { presentQuestion } from '../engine/variants'
 import { makeRng, randomSeed } from '../engine/rng'
 import { recordAttempt, setGaltiReason } from '../engine/progress'
@@ -36,60 +38,102 @@ export function PracticePage() {
   const chapterIds = params.get('c')?.split(',').filter(Boolean)
   const mode = (params.get('m') as PracticeMode) || 'mixed'
   const format = (params.get('f') as QuestionFormat) || undefined
+  const lvKey = levelKey(chapterIds)
   const [seed, setSeed] = useState(randomSeed)
-  const [queue, setQueue] = useState<Question[]>()
+  const [slots, setSlots] = useState<Slot[]>()
   const [i, setI] = useState(0)
+  const [q, setQ] = useState<Question>()
   const [response, setResponse] = useState<Response>()
   const [verdict, setVerdict] = useState<Verdict>()
   const [done, setDone] = useState<Done[]>([])
   const [combo, setCombo] = useState(0)
+  const [lv, setLv] = useState<LevelState>(startLevel(1))
+  const [peak, setPeak] = useState<Level>(1)
   const [verifyOpen, setVerifyOpen] = useState(false)
   const [cheer, setCheer] = useState('')
   const started = useRef(Date.now())
+  const rng = useRef(makeRng(seed ^ 0x9e3779b9))
+  const shownSlot = useRef<Slot>(undefined)
 
   useEffect(() => {
     let alive = true
-    buildPractice({ chapters: chapterIds, mode, format, size: settings.practiceSize, seed }).then((qs) => {
+    Promise.all([buildSlots({ chapters: chapterIds, mode, format, size: settings.practiceSize, seed }), getSetting('practiceLevels')]).then(([list, levels]) => {
       if (!alive) return
-      const rng = makeRng(seed ^ 0x9e3779b9)
-      setQueue(qs.map((q) => presentQuestion(q, rng, { noneOfTheseRate: settings.noneOfTheseRate })))
+      const level = clampLevel(levels?.[lvKey] ?? 1)
+      rng.current = makeRng(seed ^ 0x9e3779b9)
+      shownSlot.current = undefined
+      setLv(startLevel(level))
+      setPeak(level)
+      setSlots(list)
       setI(0)
+      setQ(undefined)
       setDone([])
       setCombo(0)
     })
     return () => {
       alive = false
     }
-  }, [seed, mode, format, params.get('c'), settings.practiceSize, settings.noneOfTheseRate])
+  }, [seed, mode, format, params.get('c'), settings.practiceSize])
 
-  const q = queue?.[i]
-  useEffect(() => {
+  // Make the question for the current place when it is reached, at the level reached by then
+  // (before paint, so moving on never flashes an empty screen).
+  useLayoutEffect(() => {
+    if (!slots || i >= slots.length) return
+    const slot = slots[i]
+    if (shownSlot.current === slot) return
+    const made = materialize(slot, lv.level, rng.current, format)
+    if (!made) {
+      setSlots((list) => list?.filter((x) => x !== slot))
+      return
+    }
+    shownSlot.current = slot
+    setQ(presentQuestion(made, rng.current, { noneOfTheseRate: settings.noneOfTheseRate }))
     setResponse(undefined)
     setVerdict(undefined)
     started.current = Date.now()
-  }, [q])
+  }, [slots, i])
 
   const bookmarked = useLiveQuery(async () => (q ? !!(await db.bookmarks.get(q.id)) : false), [q?.id], false)
   const galtiRow = useLiveQuery(async () => (q ? db.galti.get(q.id) : undefined), [q?.id])
   const meta = useLiveQuery(async () => (q ? db.qmeta.get(q.id) : undefined), [q?.id])
+  const hasFacts = useMemo(() => !!slots?.some((x) => x.type === 'fact'), [slots])
 
   const submit = useCallback(async () => {
-    if (!q || verdict) return
+    if (!q || verdict || !slots) return
     const v = check(q, response)
     const timeMs = Date.now() - started.current
     setVerdict(v)
     setDone((d) => [...d, { q, verdict: v, timeMs }])
     setCombo((c) => (v.correct ? c + 1 : 0))
     setCheer(v.correct ? CHEERS[Math.floor(Math.random() * CHEERS.length)] : '')
+    const slot = slots[i]
+    if (slot?.type === 'fact') {
+      const { next, change } = stepLevel(lv, v)
+      setLv(next)
+      if (change) {
+        setPeak((p) => (next.level > p ? next.level : p))
+        toast(change === 'up' ? `⬆ Level ${next.level} · ${LEVEL_NAME[next.level]}` : `Level ${next.level} · ${LEVEL_NAME[next.level]} — steady now`)
+        getSetting('practiceLevels').then((all) => setSetting('practiceLevels', { ...all, [lvKey]: next.level }))
+      }
+      if (!v.correct) {
+        const again = repeatOf(slot, q, response)
+        if (again)
+          setSlots((list) => {
+            if (!list) return list
+            const at = repeatPosition(i, list.length, rng.current)
+            return [...list.slice(0, at), again, ...list.slice(at)]
+          })
+      }
+    }
     const { graduated } = await recordAttempt({ q, qid: q.id, verdict: v, response, mode: mode === 'mistakes' ? 'galti' : 'practice', timeMs })
     if (graduated) toast('🎓 Graduated from the Galti Notebook!')
-  }, [q, response, verdict, mode])
+  }, [q, response, verdict, mode, slots, i, lv, lvKey])
 
   const next = () => setI((x) => x + 1)
   const chapterName = useMemo(() => new Map(chapters.map((c) => [c.id, c.name])), [chapters])
 
-  if (!queue) return <div className="practice loading" />
-  if (!queue.length)
+  if (!slots) return <div className="practice loading" />
+  if (!slots.length)
     return (
       <div className="practice">
         <PracticeHeader onClose={() => nav(-1)} progress={0} total={0} combo={0} />
@@ -97,23 +141,42 @@ export function PracticePage() {
       </div>
     )
 
-  if (i >= queue.length) return <Summary done={done} onAgain={() => setSeed(randomSeed())} onMistakes={() => nav('/practice?m=mistakes' + (chapterIds ? `&c=${chapterIds.join(',')}` : ''))} onExit={() => nav(-1)} />
+  if (i >= slots.length)
+    return (
+      <Summary
+        done={done}
+        peak={hasFacts ? peak : undefined}
+        onAgain={() => setSeed(randomSeed())}
+        onMistakes={() => nav('/practice?m=mistakes' + (chapterIds ? `&c=${chapterIds.join(',')}` : ''))}
+        onExit={() => nav(-1)}
+      />
+    )
+  if (!q || shownSlot.current !== slots[i]) return <div className="practice loading" />
 
   const empty = isEmpty(response)
+  const generated = q.tags.includes('generated')
+  const wrongish = !!verdict && !verdict.correct
   return (
     <div className="practice">
-      <PracticeHeader onClose={() => (done.length && !window.confirm('Leave this practice session?') ? null : nav(-1))} progress={i + (verdict ? 1 : 0)} total={queue.length} combo={combo} />
-      <div className={cx('pcard', verdict && (verdict.correct ? 'is-right' : 'is-wrong'))} key={q!.id + i}>
+      <PracticeHeader
+        onClose={() => (done.length && !window.confirm('Leave this practice session?') ? null : nav(-1))}
+        progress={i + (verdict ? 1 : 0)}
+        total={slots.length}
+        combo={combo}
+        level={hasFacts ? lv : undefined}
+      />
+      <div className={cx('pcard', verdict && (verdict.correct ? 'is-right' : 'is-wrong'))} key={q.id + i}>
         <div className="pcard-meta">
-          <span className="pill">{FORMAT_LABEL[q!.format]}</span>
-          <span className="muted small">{chapterName.get(q!.chapter)}</span>
-          {q!.source?.label && <span className="muted small">· {q!.source.label}</span>}
-          {q!.tags.includes('generated') && <span className="pill pill-accent">from To Remember</span>}
-          {!isTrusted(q!.verified, meta) && <span className="pill pill-warn">key unverified</span>}
+          <span className="pill">{FORMAT_LABEL[q.format]}</span>
+          <span className="muted small">{chapterName.get(q.chapter)}</span>
+          {q.source?.label && <span className="muted small">· {q.source.label}</span>}
+          {generated && <span className="pill pill-accent">To Remember{levelOf(q) ? ` · Lv ${levelOf(q)}` : ''}</span>}
+          {q.tags.includes('repeat') && <span className="pill pill-warn">Again — you missed this</span>}
+          {!isTrusted(q.verified, meta) && <span className="pill pill-warn">key unverified</span>}
           {galtiRow?.status === 'active' && <span className="pill pill-bad">Galti · {galtiRow.streak}/{settings.graduateAfter}</span>}
         </div>
-        <QuestionStem q={q!} />
-        <AnswerInput q={q!} value={response} onChange={setResponse} reveal={!!verdict} />
+        <QuestionStem q={q} />
+        <AnswerInput q={q} value={response} onChange={setResponse} reveal={!!verdict} />
       </div>
 
       {verdict && (
@@ -128,28 +191,43 @@ export function PracticePage() {
             ) : verdict.partial ? (
               'Partly right — one or more correct options missing.'
             ) : (
-              'Not quite. Look at the right answer above.'
+              'Not quite.'
             )}
           </div>
-          {(q!.solution || q!.solutionImage) && (
-            <div className="solution">
-              <Rich text={q!.solution} />
-              <MediaImage src={q!.solutionImage} />
+          {wrongish && (
+            <div className="right-answer">
+              <span className="muted small">Correct answer</span>
+              <Rich text={answerInWords(q)} />
             </div>
           )}
-          {!verdict.correct && verdict.attempted && <ReasonChips qid={q!.id} />}
+          {(q.solution || q.solutionImage) &&
+            (wrongish ? (
+              <div className="solution">
+                <span className="muted small">Why</span>
+                <Rich text={q.solution} />
+                <MediaImage src={q.solutionImage} />
+              </div>
+            ) : (
+              <details className="solution">
+                <summary className="muted small">Why? (tap)</summary>
+                <Rich text={q.solution} />
+                <MediaImage src={q.solutionImage} />
+              </details>
+            ))}
+          {generated && wrongish && <p className="muted small again-note">This will come back in a few questions, asked another way.</p>}
+          {!verdict.correct && verdict.attempted && <ReasonChips qid={q.id} />}
         </div>
       )}
 
       <footer className="pfoot">
         <div className="pfoot-tools">
-          <button type="button" className="icon-btn" aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark'} onClick={() => toggleBookmark(q!, bookmarked)}>
+          <button type="button" className="icon-btn" aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark'} onClick={() => toggleBookmark(q, bookmarked)}>
             {bookmarked ? <BookmarkCheck size={20} /> : <Bookmark size={20} />}
           </button>
           <button type="button" className="icon-btn" aria-label="Verify answer key" onClick={() => setVerifyOpen(true)}>
             <ShieldCheck size={20} />
           </button>
-          <button type="button" className="icon-btn" aria-label="Report a problem" onClick={() => report(q!.id)}>
+          <button type="button" className="icon-btn" aria-label="Report a problem" onClick={() => report(q.id)}>
             <Flag size={20} />
           </button>
         </div>
@@ -165,7 +243,7 @@ export function PracticePage() {
         ) : (
           <div className="pfoot-main">
             <Button variant="primary" size="lg" onClick={next} autoFocus>
-              {i + 1 < queue.length ? 'Next' : 'Finish'}
+              {i + 1 < slots.length ? 'Next' : 'Finish'}
             </Button>
           </div>
         )}
@@ -173,7 +251,7 @@ export function PracticePage() {
       <VerifySheet
         open={verifyOpen}
         onClose={() => setVerifyOpen(false)}
-        shown={q!}
+        shown={q}
         response={response}
         onFixed={(nowCorrect) => nowCorrect && setVerdict((v) => (v ? { ...v, correct: true, partial: false } : v))}
       />
@@ -181,13 +259,20 @@ export function PracticePage() {
   )
 }
 
-function PracticeHeader({ onClose, progress, total, combo }: { onClose: () => void; progress: number; total: number; combo: number }) {
+function PracticeHeader({ onClose, progress, total, combo, level }: { onClose: () => void; progress: number; total: number; combo: number; level?: LevelState }) {
   return (
     <header className="phead">
       <button type="button" className="icon-btn" aria-label="Close practice" onClick={onClose}>
         <X size={22} />
       </button>
       <Bar value={progress} max={total} color="linear-gradient(90deg, var(--accent), var(--cyan))" />
+      {level && (
+        <div className={cx('lv', `lv-${level.level}`)} aria-label={`Level ${level.level}, ${LEVEL_NAME[level.level]}. ${level.rightRun} of ${LEVEL_UP_AFTER} right in a row towards the next level.`} title={LEVEL_NAME[level.level]}>
+          <b>Lv {level.level}</b>
+          {level.level < MAX_LEVEL &&
+            Array.from({ length: LEVEL_UP_AFTER }, (_, k) => <i key={k} className={k < level.rightRun ? 'on' : undefined} />)}
+        </div>
+      )}
       <div className={cx('combo', combo >= 3 && 'hot')} aria-label={`${combo} in a row`}>
         <Flame size={18} />
         <b>{combo}</b>
@@ -226,7 +311,7 @@ async function report(qid: string) {
   }
 }
 
-function Summary({ done, onAgain, onMistakes, onExit }: { done: Done[]; onAgain: () => void; onMistakes: () => void; onExit: () => void }) {
+function Summary({ done, peak, onAgain, onMistakes, onExit }: { done: Done[]; peak?: Level; onAgain: () => void; onMistakes: () => void; onExit: () => void }) {
   const right = done.filter((d) => d.verdict.correct).length
   const attempted = done.filter((d) => d.verdict.attempted).length
   const time = done.reduce((a, d) => a + d.timeMs, 0)
@@ -242,6 +327,7 @@ function Summary({ done, onAgain, onMistakes, onExit }: { done: Done[]; onAgain:
         <Stat label="Correct" value={`${right}/${done.length}`} tone="good" />
         <Stat label="Accuracy" value={`${pct}%`} tone="accent" />
         <Stat label="Time" value={formatDuration(time)} />
+        {peak && <Stat label="Top level" value={`${peak} · ${LEVEL_NAME[peak]}`} tone="accent" />}
       </div>
       <div className="summary-actions">
         <Button variant="primary" size="lg" icon={<RotateCcw size={18} />} onClick={onAgain}>

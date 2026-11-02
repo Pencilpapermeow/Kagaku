@@ -10,7 +10,9 @@ import { InstallHelp } from '../ui/install'
 function useDraft<K extends keyof Settings>(key: K) {
   const settings = useSettings()
   const [v, setV] = useState(settings[key])
-  useEffect(() => setV(settings[key]), [settings, key])
+  useEffect(() => {
+    setV(settings[key])
+  }, [settings, key])
   return [v, setV, () => setSetting(key, v).then(() => toast('Saved'))] as const
 }
 

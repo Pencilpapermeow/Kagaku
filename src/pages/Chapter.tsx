@@ -6,7 +6,9 @@ import { db, type RememberRow } from '../db/db'
 import { useChapter, useChapterStats } from '../db/queries'
 import { getSubject } from '../content/syllabus'
 import { FORMAT_LABEL, type QuestionFormat } from '../content/schema'
-import { generateFrom } from '../engine/generate'
+import { factsOf, generateFrom, LEVEL_NAME, clampLevel } from '../engine/generate'
+import { levelKey } from '../engine/adaptive'
+import { useSettings } from '../db/settings'
 import { makeRng } from '../engine/rng'
 import { Button, Chip, Empty, Tabs, TopBar, cx, toast } from '../ui/kit'
 import { MathBlock, MediaImage, Rich } from '../ui/content'
@@ -191,11 +193,15 @@ function PracticeTab({ chapter }: { chapter: string }) {
       db.remember.where('chapter').equals(chapter).toArray(),
       db.galti.where('chapter').equals(chapter).filter((g) => g.status === 'active').count(),
     ])
-    const gen = rem.flatMap((r) => generateFrom(r, makeRng(1)))
+    const facts = rem.reduce((n, r) => n + factsOf(r).length, 0)
+    // One sample question per fact (random level 1–4), just to know which formats come up.
+    const gen = rem.flatMap((r) => generateFrom(r, makeRng(1), 1, 4))
     const formats = new Map<QuestionFormat, number>()
     for (const q of [...qs, ...gen]) formats.set(q.format, (formats.get(q.format) ?? 0) + 1)
-    return { questions: qs.length, generated: gen.length, galti, formats: [...formats.entries()] }
+    return { questions: qs.length, generated: facts, galti, formats: [...formats.entries()] }
   }, [chapter])
+  const settings = useSettings()
+  const level = clampLevel(settings.practiceLevels?.[levelKey([chapter])] ?? 1)
   const go = (m: string, f?: string) => nav(`/practice?c=${encodeURIComponent(chapter)}&m=${m}${f ? `&f=${f}` : ''}`)
   if (!data) return null
   if (!data.questions && !data.generated)
@@ -213,7 +219,7 @@ function PracticeTab({ chapter }: { chapter: string }) {
         <div>
           <b>Mixed practice</b>
           <p className="muted small">
-            {data.questions} questions + {data.generated} from formulas & tables
+            {data.questions} questions + {data.generated} facts from To Remember
           </p>
         </div>
       </button>
@@ -226,7 +232,9 @@ function PracticeTab({ chapter }: { chapter: string }) {
         <button type="button" className="card action" onClick={() => go('generated')} disabled={!data.generated}>
           <Sparkles size={20} />
           <b>From To Remember</b>
-          <span className="muted small">{data.generated}</span>
+          <span className="muted small">
+            {data.generated} facts · Lv {level} {LEVEL_NAME[level]}
+          </span>
         </button>
         <button type="button" className="card action" onClick={() => go('mistakes')} disabled={!data.galti}>
           <NotebookPen size={20} />

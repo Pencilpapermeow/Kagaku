@@ -16,6 +16,8 @@ export interface Settings {
   /** Chance that practice swaps the correct option for "None of these". */
   noneOfTheseRate: number
   practiceSize: number
+  /** Level reached in "To Remember" practice, per chapter (or chapter set). */
+  practiceLevels: Record<string, number>
   /** He tapped "Not now" on the Home install card. */
   installHintDismissed: boolean
   lastBackupAt: number
@@ -34,6 +36,7 @@ export const DEFAULT_SETTINGS: Settings = {
   graduateAfter: 3,
   noneOfTheseRate: 0.12,
   practiceSize: 20,
+  practiceLevels: {},
   installHintDismissed: false,
   lastBackupAt: 0,
   installedAt: 0,

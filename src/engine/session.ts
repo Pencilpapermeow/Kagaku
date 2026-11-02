@@ -2,7 +2,8 @@
 
 import { db, type GaltiRow, type QMetaRow } from '../db/db'
 import type { Question, QuestionFormat } from '../content/schema'
-import { generateFrom } from './generate'
+import { factsOf, generateFrom, generateOne, isGeneratedId, LEVELS, parseGeneratedId } from './generate'
+import type { Slot } from './adaptive'
 import { makeRng, shuffle, type Rng } from './rng'
 
 export type PracticeMode = 'mixed' | 'questions' | 'generated' | 'mistakes' | 'bookmarks' | 'doubtful'
@@ -85,6 +86,75 @@ export async function buildPractice(p: SessionParams): Promise<Question[]> {
   scored.sort((a, b) => b.s - a.s)
   return shuffle(
     scored.slice(0, p.size).map((x) => x.q),
+    rng,
+  )
+}
+
+/**
+ * A practice session as slots. "To Remember" content enters as facts (a table row, a trend) that
+ * become questions only when reached, at the level he has climbed to by then (engine/adaptive.ts).
+ * Stored questions are picked exactly as in buildPractice.
+ */
+export async function buildSlots(p: SessionParams): Promise<Slot[]> {
+  if (p.mode !== 'mixed' && p.mode !== 'generated') return (await buildPractice(p)).map((q) => ({ type: 'question', q }))
+
+  const rng = makeRng(p.seed)
+  const stored: Question[] =
+    p.mode === 'mixed' ? (p.chapters ? await db.questions.where('chapter').anyOf(p.chapters).toArray() : await db.questions.toArray()).filter((q) => !p.format || q.format === p.format) : []
+  const items = p.chapters ? await db.remember.where('chapter').anyOf(p.chapters).toArray() : await db.remember.toArray()
+  let facts = items.flatMap(factsOf)
+  if (p.format) {
+    const probe = makeRng(1)
+    facts = facts.filter((f) => LEVELS.some((level) => generateOne(f.r, { level, rng: probe, rows: f.rows.length ? f.rows : undefined, format: p.format })))
+  }
+  if (!stored.length && !facts.length) return []
+
+  // What he has done with each fact before: seen? wrong and still in Galti? right recently?
+  const factKey = (rid: string, rows: number[]) => `${rid}#${rows.length ? rows[0] : 't'}`
+  const genAttempts = await db.attempts.where('qid').startsWith('g:').toArray()
+  const seenFacts = new Set<string>()
+  const lastRightFact = new Map<string, number>()
+  for (const a of genAttempts) {
+    const info = parseGeneratedId(a.qid)
+    if (!info) continue
+    for (const k of info.rows.length ? info.rows.map((row) => factKey(info.rid, [row])) : [factKey(info.rid, [])]) {
+      seenFacts.add(k)
+      if (a.correct) lastRightFact.set(k, Math.max(lastRightFact.get(k) ?? 0, a.at))
+    }
+  }
+  const galtiFacts = new Set<string>()
+  for (const g of await db.galti.where('status').equals('active').toArray()) {
+    const info = isGeneratedId(g.qid) ? parseGeneratedId(g.qid) : undefined
+    if (info) for (const k of info.rows.length ? info.rows.map((row) => factKey(info.rid, [row])) : [factKey(info.rid, [])]) galtiFacts.add(k)
+  }
+
+  const ids = stored.map((q) => q.id)
+  const [galti, metas, attempts] = await Promise.all([db.galti.bulkGet(ids), db.qmeta.bulkGet(ids), db.attempts.where('qid').anyOf(ids).toArray()])
+  const seen = new Set(attempts.map((a) => a.qid))
+  const lastRight = new Map<string, number>()
+  for (const a of attempts) if (a.correct) lastRight.set(a.qid, Math.max(lastRight.get(a.qid) ?? 0, a.at))
+  const weekAgo = Date.now() - 7 * 864e5
+
+  const scored: { slot: Slot; s: number }[] = [
+    ...stored.map((q, i) => {
+      let s = rng()
+      if (!seen.has(q.id)) s += 1
+      if (galti[i]?.status === 'active') s += 0.7
+      if ((lastRight.get(q.id) ?? 0) > weekAgo) s -= 0.5
+      return { slot: { type: 'question', q: withFix(q, metas[i]) } as Slot, s }
+    }),
+    ...facts.map((f) => {
+      const k = factKey(f.r.id, f.rows)
+      let s = rng()
+      if (!seenFacts.has(k)) s += 1
+      if (galtiFacts.has(k)) s += 0.7
+      if ((lastRightFact.get(k) ?? 0) > weekAgo) s -= 0.5
+      return { slot: { type: 'fact', r: f.r, rows: f.rows } as Slot, s }
+    }),
+  ]
+  scored.sort((a, b) => b.s - a.s)
+  return shuffle(
+    scored.slice(0, p.size).map((x) => x.slot),
     rng,
   )
 }
