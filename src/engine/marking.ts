@@ -43,13 +43,15 @@ export function effectiveAnswer(q: Question, fixed?: unknown): Question['answer'
 
 export function check(q: Question, r: Response | undefined, fixed?: unknown): Verdict {
   const none: Verdict = { correct: false, partial: false, rightChosen: 0, attempted: false }
+  // A bonus question gives full marks to everyone (see cbt.evaluate for the unattempted case).
+  if (q.bonus) return { correct: true, partial: false, rightChosen: 0, attempted: !!r && !isEmpty(r) }
   if (!r || isEmpty(r)) return none
   const answer = effectiveAnswer(q, fixed)
   const v = (correct: boolean, partial = false, rightChosen = 0): Verdict => ({ correct, partial, rightChosen, attempted: true })
 
   switch (q.format) {
     case 'single':
-      return r.kind === 'options' ? v(r.ids.length === 1 && r.ids[0] === answer) : v(false)
+      return r.kind === 'options' ? v(r.ids.length === 1 && (r.ids[0] === answer || (fixed === undefined && !!q.accept?.includes(r.ids[0])))) : v(false)
     case 'assertion':
       return r.kind === 'options' ? v(r.ids.length === 1 && r.ids[0] === answer) : v(false)
     case 'multiple': {
@@ -185,9 +187,10 @@ export function answerInWords(q: Question, fixed?: unknown): string {
 /** The correct answer written out for the result screen. */
 export function describeAnswer(q: Question, fixed?: unknown): string {
   const a = effectiveAnswer(q, fixed)
+  if (q.bonus) return 'Bonus (full marks to all)'
   switch (q.format) {
     case 'single':
-      return String(a)
+      return q.accept?.length && fixed === undefined ? [a, ...q.accept].join(' or ') : String(a)
     case 'multiple':
       return (a as string[]).join(', ')
     case 'integer':

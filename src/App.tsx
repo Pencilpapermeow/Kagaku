@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Shell } from './ui/Shell'
 import { HomePage } from './pages/Home'
@@ -15,6 +15,10 @@ import { SettingsPage } from './pages/Settings'
 import { SearchPage } from './pages/Search'
 import { ReviewPage } from './pages/Review'
 import { useSettings } from './db/settings'
+
+// "Test from paper" loads only when used (pdf.js and OCR come with it, lazily).
+const PaperNewPage = lazy(() => import('./pages/paper/PaperNew').then((m) => ({ default: m.PaperNewPage })))
+const PaperCheckPage = lazy(() => import('./pages/paper/PaperCheck').then((m) => ({ default: m.PaperCheckPage })))
 
 function ThemeSync() {
   const { theme } = useSettings()
@@ -69,6 +73,22 @@ export function App() {
           <Route path="/c/:chapter" element={<ChapterPage />} />
           <Route path="/tests" element={<TestsPage />} />
           <Route path="/tests/new" element={<TestBuilderPage />} />
+          <Route
+            path="/tests/paper"
+            element={
+              <Suspense fallback={null}>
+                <PaperNewPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/tests/paper/:id"
+            element={
+              <Suspense fallback={null}>
+                <PaperCheckPage />
+              </Suspense>
+            }
+          />
           <Route path="/test/:id/result" element={<ResultPage />} />
           <Route path="/notebooks" element={<NotebooksPage />} />
           <Route path="/update" element={<UpdatePage />} />

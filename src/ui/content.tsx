@@ -43,10 +43,21 @@ export function useMediaUrl(ref: string | undefined): string | undefined {
   return url
 }
 
-export function MediaImage({ src, alt = '', className }: { src?: string; alt?: string; className?: string }) {
+export function MediaImage({ src, alt = '', className, scale }: { src?: string; alt?: string; className?: string; scale?: number }) {
   const url = useMediaUrl(src)
   if (!src) return null
-  return url ? <img className={cx('media', className)} src={url} alt={alt} loading="lazy" /> : <div className={cx('media media-loading', className)} />
+  return url ? (
+    <img
+      className={cx('media', className)}
+      src={url}
+      alt={alt}
+      loading="lazy"
+      // Crops of his own papers: shown about as big as print (pinch to zoom), never stretched.
+      onLoad={scale ? (e) => (e.currentTarget.style.width = `${Math.round(e.currentTarget.naturalWidth * scale)}px`) : undefined}
+    />
+  ) : (
+    <div className={cx('media media-loading', className)} />
+  )
 }
 
 export function PassageView({ passage }: { passage: Passage }) {
@@ -85,7 +96,7 @@ export function QuestionStem({ q }: { q: Question }) {
           </div>
         </div>
       )}
-      {q.image && <MediaImage src={q.image} alt="Diagram" className="stem-img" />}
+      {q.image && (q.tags.includes('paper') ? <MediaImage src={q.image} alt="Question from your paper" className="stem-img stem-paper" scale={0.6} /> : <MediaImage src={q.image} alt="Diagram" className="stem-img" />)}
     </div>
   )
 }

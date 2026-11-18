@@ -22,6 +22,8 @@ export interface Chapter {
   no?: number
   aliases?: string[]
   topics?: string[]
+  /** Buckets for questions from his own papers: never listed with the real chapters. */
+  hidden?: boolean
 }
 
 export const SUBJECTS: Subject[] = [
@@ -187,6 +189,12 @@ function build(subject: SubjectId, rows: Row[]): Chapter[] {
 }
 
 export const BASE_CHAPTERS: Chapter[] = [...build('phy', PHY), ...build('chem', CHEM), ...build('math', MATH)]
+
+/**
+ * "Test from paper" questions belong here until he picks their real chapter after a test.
+ * Hidden from chapter lists, counts and the test builder.
+ */
+export const PAPER_CHAPTERS: Chapter[] = SUBJECTS.map((s) => ({ id: `${s.id}.from-papers`, subject: s.id, unit: 'misc', cls: 12, name: `From papers · ${s.name}`, hidden: true }))
 
 export function subjectOf(chapterId: string): SubjectId | undefined {
   const s = chapterId.split('.')[0]

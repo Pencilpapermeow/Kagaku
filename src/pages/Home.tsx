@@ -120,7 +120,7 @@ export function HomePage() {
           {SUBJECTS.map((s) => {
             const Icon = SUBJECT_ICON[s.id]
             const t = subjectTotals(stats, chapters, s.id)
-            const nCh = chapters.filter((c) => c.subject === s.id).length
+            const nCh = chapters.filter((c) => c.subject === s.id && !c.hidden).length
             return (
               <Link key={s.id} to={`/s/${s.id}`} className="card subject-card" style={{ ['--tint' as string]: SUBJECT_COLOR[s.id] }}>
                 <div className="tile">

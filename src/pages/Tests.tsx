@@ -1,18 +1,20 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ChevronRight, ClipboardPlus, FileText, History, NotebookPen, Timer } from 'lucide-react'
+import { ChevronRight, ClipboardPlus, FileText, History, ImageOff, Loader2, NotebookPen, ScanLine, Timer, Trash2 } from 'lucide-react'
 import { db } from '../db/db'
 import { createTest } from '../engine/cbt'
 import { resolveScheme } from '../engine/marking'
 import { buildPractice, questionsByIds } from '../engine/session'
 import { randomSeed } from '../engine/rng'
-import { Button, Empty, TopBar, toast } from '../ui/kit'
+import { Button, Empty, TopBar, formatBytes, toast } from '../ui/kit'
+import type { UserPaperRow } from '../paper/types'
 
 export function TestsPage() {
   const nav = useNavigate()
   const papers = useLiveQuery(() => db.papers.toArray(), [])
   const tests = useLiveQuery(() => db.tests.orderBy('createdAt').reverse().limit(30).toArray(), [])
   const galti = useLiveQuery(() => db.galti.where('status').equals('active').count(), [], 0)
+  const myPapers = useLiveQuery(() => db.userPapers.orderBy('createdAt').reverse().toArray(), [])
 
   const startPaper = async (paperId: string) => {
     const p = await db.papers.get(paperId)
@@ -44,6 +46,16 @@ export function TestsPage() {
           </div>
           <ChevronRight className="muted" />
         </Link>
+        <Link to="/tests/paper" className="card hero-card tone-accent-border">
+          <div className="tile tone-accent">
+            <ScanLine size={26} />
+          </div>
+          <div>
+            <h3>Test from paper</h3>
+            <p className="muted small">Question paper + answer key (photos or PDF) → a CBT test, offline.</p>
+          </div>
+          <ChevronRight className="muted" />
+        </Link>
         <button type="button" className="card hero-card tone-pink-border" onClick={startMistakes} disabled={!galti}>
           <div className="tile tone-bad">
             <NotebookPen size={26} />
@@ -55,6 +67,17 @@ export function TestsPage() {
           <ChevronRight className="muted" />
         </button>
       </div>
+
+      {myPapers && myPapers.length > 0 && (
+        <>
+          <h2 className="section-title">My papers</h2>
+          <div className="paper-list">
+            {myPapers.map((p) => (
+              <MyPaper key={p.id} p={p} attempts={tests?.filter((t) => t.userPaperId === p.id && t.state === 'submitted').length ?? 0} />
+            ))}
+          </div>
+        </>
+      )}
 
       <h2 className="section-title">Question papers</h2>
       {papers?.length ? (
@@ -114,6 +137,50 @@ export function TestsPage() {
       ) : (
         <p className="muted small pad">Tests you take will be listed here.</p>
       )}
+    </div>
+  )
+}
+
+function MyPaper({ p, attempts }: { p: UserPaperRow; attempts: number }) {
+  const nav = useNavigate()
+  const start = async () => {
+    try {
+      const { startPaperTest } = await import('../paper/store')
+      nav(`/test/${await startPaperTest(p.id)}`)
+    } catch (e) {
+      toast((e as Error).message)
+    }
+  }
+  const remove = async () => {
+    if (!window.confirm(`Delete "${p.title}"? Test results stay in History.`)) return
+    const { deletePaper } = await import('../paper/store')
+    await deletePaper(p.id)
+  }
+  return (
+    <div className="card paper my-paper">
+      <Link to={`/tests/paper/${p.id}`} className="paper-main">
+        {p.status === 'processing' ? <Loader2 size={20} className="spin" /> : p.imagesDeleted ? <ImageOff size={20} /> : <ScanLine size={20} />}
+        <div>
+          <b>{p.title}</b>
+          <p className="muted small">
+            {p.status === 'processing'
+              ? (p.progress?.label ?? 'Making the test…')
+              : p.status === 'failed'
+                ? 'Something went wrong — open to retry'
+                : `${p.questions.length} Questions · ${p.durationMin} Mins · Attempts: ${attempts}${p.imagesDeleted ? ' · pictures deleted' : ` · ${formatBytes(p.bytes)}`}`}
+          </p>
+        </div>
+      </Link>
+      <div className="row gap">
+        {p.status === 'ready' && !p.imagesDeleted && (
+          <Button variant="primary" size="sm" onClick={p.checkedAt ? start : () => nav(`/tests/paper/${p.id}`)}>
+            {p.checkedAt ? 'Start' : 'Check'}
+          </Button>
+        )}
+        <button type="button" className="icon-btn" aria-label={`Delete ${p.title}`} onClick={remove}>
+          <Trash2 size={16} />
+        </button>
+      </div>
     </div>
   )
 }

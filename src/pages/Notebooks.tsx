@@ -9,6 +9,7 @@ import { SUBJECTS, getSubject, subjectOf, type Chapter } from '../content/syllab
 import type { Question } from '../content/schema'
 import { sha256Hex } from '../content/hash'
 import { setGaltiReason } from '../engine/progress'
+import { processPhoto } from '../ui/photo'
 import { plainText } from '../ui/rich'
 import { MediaImage, Rich } from '../ui/content'
 import { Bar, Button, Chip, Empty, Field, Sheet, Tabs, TopBar, cx, toast } from '../ui/kit'
@@ -67,6 +68,7 @@ function mistakePatterns(rows: GaltiRow[], chapters: Chapter[], byChapter: boole
     const c = chapters.find((x) => x.id === cid)
     if (!c) return cid
     if (byChapter) return c.name
+    if (c.hidden) return `${getSubject(c.subject).short} · From papers`
     return `${getSubject(c.subject).short} · ${getSubject(c.subject).units.find((u) => u.id === c.unit)?.name ?? c.unit}`
   }
   const groups = new Map<string, Record<GaltiReason | 'untagged', number>>()
@@ -296,30 +298,6 @@ function AllNotes() {
   )
 }
 
-/** Rotate, brighten and shrink a photo in the browser before storing it. */
-async function processPhoto(file: Blob, quarterTurns: number, bright: boolean): Promise<Blob> {
-  const bmp = await createImageBitmap(file)
-  const maxW = 1400
-  const turned = quarterTurns % 2 === 1
-  const srcW = turned ? bmp.height : bmp.width
-  const scale = Math.min(1, maxW / srcW)
-  const w = Math.round((turned ? bmp.height : bmp.width) * scale)
-  const h = Math.round((turned ? bmp.width : bmp.height) * scale)
-  const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  const ctx = canvas.getContext('2d')!
-  if (bright) ctx.filter = 'brightness(1.25) contrast(1.25) saturate(0.6)'
-  ctx.translate(w / 2, h / 2)
-  ctx.rotate((quarterTurns * Math.PI) / 2)
-  const dw = bmp.width * scale
-  const dh = bmp.height * scale
-  ctx.drawImage(bmp, -dw / 2, -dh / 2, dw, dh)
-  const toBlob = (type: string, q: number) => new Promise<Blob | null>((res) => canvas.toBlob(res, type, q))
-  const webp = await toBlob('image/webp', 0.8)
-  return webp && webp.type === 'image/webp' ? webp : ((await toBlob('image/jpeg', 0.82)) as Blob)
-}
-
 function AddMistakeSheet({ open, onClose, defaultChapter }: { open: boolean; onClose: () => void; defaultChapter?: string }) {
   const chapters = useChapters()
   const [chapter, setChapter] = useState(defaultChapter ?? '')
@@ -379,7 +357,7 @@ function AddMistakeSheet({ open, onClose, defaultChapter }: { open: boolean; onC
             {SUBJECTS.map((s) => (
               <optgroup key={s.id} label={s.name}>
                 {chapters
-                  .filter((c) => c.subject === s.id)
+                  .filter((c) => c.subject === s.id && !c.hidden)
                   .map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}

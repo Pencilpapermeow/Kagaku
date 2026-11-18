@@ -6,6 +6,7 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { Passage, Paper, Question, Remember, MarkingScheme } from '../content/schema'
 import type { Chapter } from '../content/syllabus'
+import type { PaperFileRow, UserPaperRow } from '../paper/types'
 
 export type Stored<T> = T & { packId: string }
 
@@ -117,8 +118,10 @@ export interface TestSection {
 export interface TestRow {
   id: string
   title: string
-  kind: 'custom' | 'paper' | 'mistakes'
+  kind: 'custom' | 'paper' | 'mistakes' | 'upaper'
   paperId?: string
+  /** "Test from paper": the paper he added himself (userPapers). */
+  userPaperId?: string
   createdAt: number
   durationSec: number
   sections: TestSection[]
@@ -160,6 +163,8 @@ export class KagakuDB extends Dexie {
   tests!: EntityTable<TestRow, 'id'>
   days!: EntityTable<DayRow, 'date'>
   settings!: EntityTable<SettingRow, 'key'>
+  userPapers!: EntityTable<UserPaperRow, 'id'>
+  paperFiles!: EntityTable<PaperFileRow, 'id'>
 
   constructor(name = 'kagaku') {
     super(name)
@@ -179,6 +184,12 @@ export class KagakuDB extends Dexie {
       tests: 'id, createdAt, state',
       days: 'date',
       settings: 'key',
+    })
+    // v2: "Test from paper". Papers he adds himself (page images live in media with
+    // packs ['paper:<id>']), and their raw uploads until processing has finished.
+    this.version(2).stores({
+      userPapers: 'id, createdAt, status',
+      paperFiles: '++id, paperId',
     })
   }
 }

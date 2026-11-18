@@ -7,6 +7,8 @@ import { evaluate, loadTestQuestions, type QuestionResult } from '../engine/cbt'
 import { describeAnswer, type Response } from '../engine/marking'
 import { describeResponse } from '../engine/verify'
 import { useChapters } from '../db/queries'
+import { isPaperId } from '../paper/types'
+import { subjectOf } from '../content/syllabus'
 import { AnswerInput } from '../ui/answer'
 import { QuestionStem, Rich } from '../ui/content'
 import { Bar, Chip, Sheet, Stat, TopBar, cx, formatDuration } from '../ui/kit'
@@ -105,6 +107,32 @@ export function ResultPage() {
               Your answer: <b>{describeResponse(oq, oresp)}</b> · Key: <b>{describeAnswer(oq)}</b> · Marks: <b>{open.marks}</b>
             </p>
             {oq.solution && <Rich text={oq.solution} className="solution" />}
+            {isPaperId(oq.id) && (
+              <label className="field">
+                <span className="field-label">Chapter (for the Galti Notebook)</span>
+                <select
+                  value={chapters.find((c) => c.id === oq.chapter && !c.hidden) ? oq.chapter : ''}
+                  onChange={async (e) => {
+                    if (!e.target.value) return
+                    const { setPaperQuestionChapter } = await import('../paper/store')
+                    await setPaperQuestionChapter(oq.id, e.target.value)
+                    setTest(await db.tests.get(id))
+                    const t = await db.tests.get(id)
+                    if (t) setQuestions(await loadTestQuestions(t))
+                  }}
+                >
+                  <option value="">Choose the chapter…</option>
+                  {chapters
+                    .filter((c) => !c.hidden && c.subject === subjectOf(oq.chapter))
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.no ? `${c.no}. ` : ''}
+                        {c.name}
+                      </option>
+                    ))}
+                </select>
+              </label>
+            )}
             <button type="button" className="btn btn-soft btn-md" onClick={() => setVerify(true)}>
               <ShieldCheck size={18} />
               <span>Verify key</span>

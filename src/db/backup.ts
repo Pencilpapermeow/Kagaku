@@ -38,7 +38,11 @@ export async function makeBackup(): Promise<Blob> {
     tables[t] = t === 'settings' ? rows.filter((r: { key: string }) => r.key !== 'githubToken' && r.key !== 'geminiKey') : rows
   }
   const userQuestions = await db.questions.where('packId').equals('user').toArray()
-  const media = await db.media.where('packs').equals('user').toArray()
+  // His own photos, plus the paper crops that Galti entries show (a restored Galti must not be blank).
+  const { galtiMediaHashes } = await import('../paper/store')
+  const own = await db.media.where('packs').equals('user').toArray()
+  const galtiHashes = [...(await galtiMediaHashes())].filter((h) => !own.some((m) => m.hash === h))
+  const media = [...own, ...((await db.media.bulkGet(galtiHashes)).filter(Boolean) as MediaRow[]).map((m) => ({ ...m, packs: [...new Set([...m.packs, 'galti'])] }))]
   const userMedia = await Promise.all(media.map(async ({ blob, ...m }) => ({ ...m, data: await toBase64(blob) })))
   const file: BackupFile = { format: BACKUP_FORMAT, version: 1, createdAt: new Date().toISOString(), tables, userQuestions, userMedia }
   return new Blob([JSON.stringify(file)], { type: 'application/json' })
@@ -68,7 +72,10 @@ export async function restoreBackup(file: Blob): Promise<{ attempts: number; gal
     }
     for (const k of keep) if (k) await db.settings.put(k)
     await db.questions.bulkPut(data.userQuestions ?? [])
-    await db.media.bulkPut((data.userMedia ?? []).map(({ data: d, ...m }) => ({ ...m, blob: fromBase64(d, m.type) })))
+    for (const { data: d, ...m } of data.userMedia ?? []) {
+      const old = await db.media.get(m.hash)
+      await db.media.put({ ...m, packs: [...new Set([...(old?.packs ?? []), ...m.packs])], blob: old?.blob ?? fromBase64(d, m.type) })
+    }
   })
   return { attempts: data.tables.attempts?.length ?? 0, galti: data.tables.galti?.length ?? 0 }
 }

@@ -4,6 +4,7 @@ import { db, type AttemptMode, type GaltiReason, type GaltiRow } from '../db/db'
 import { getSetting } from '../db/settings'
 import type { Question } from '../content/schema'
 import { isGeneratedId } from './generate'
+import { isPaperId } from '../paper/types'
 import type { Response, Verdict } from './marking'
 
 export function localDate(t = Date.now()): string {
@@ -65,7 +66,7 @@ export async function recordAttempt(a: AttemptInput): Promise<{ galti?: GaltiRow
         wrongCount: (existing?.wrongCount ?? 0) + 1,
         status: 'active',
         note: existing?.note,
-        snapshot: isGeneratedId(a.qid) ? a.q : existing?.snapshot,
+        snapshot: isGeneratedId(a.qid) || isPaperId(a.qid) ? a.q : existing?.snapshot,
       }
       await db.galti.put(galti)
     } else if (existing && existing.status === 'active') {

@@ -75,6 +75,8 @@ const questionBase = {
   difficulty: z.number().int().min(1).max(3).optional(),
   /** What the transcriber was unsure about (accuracy layer 2); shown on the review screen. */
   uncertain: z.string().max(500).optional(),
+  /** "Bonus"/"Dropped" in the official key: full marks to everyone. */
+  bonus: z.boolean().optional(),
 }
 
 const choice = {
@@ -86,7 +88,16 @@ const choice = {
 export const ASSERTION_CODES = ['both-explains', 'both-not-explains', 'a-only', 'r-only', 'neither'] as const
 
 export const zQuestion = z.discriminatedUnion('format', [
-  z.object({ ...questionBase, format: z.literal('single'), ...choice, answer: z.string().min(1) }).strict(),
+  z
+    .object({
+      ...questionBase,
+      format: z.literal('single'),
+      ...choice,
+      answer: z.string().min(1),
+      /** Other options the key also accepts ("A or C"). */
+      accept: z.array(z.string().min(1)).max(9).optional(),
+    })
+    .strict(),
   z.object({ ...questionBase, format: z.literal('multiple'), ...choice, answer: z.array(z.string().min(1)).min(1) }).strict(),
   z.object({ ...questionBase, format: z.literal('integer'), answer: z.number().int() }).strict(),
   z

@@ -14,6 +14,7 @@ Kagaku (科学) is an offline-first PWA for JEE Advanced practice, built for one
 | Offline | `vite-plugin-pwa` (Workbox precache, update prompt in `src/ui/UpdatePrompt.tsx`) |
 | Icons | `lucide-react`; fonts self-hosted via `@fontsource-variable/*` |
 | Tests | Vitest (unit, `src/**/*.test.ts`, `fake-indexeddb`) and Playwright (`tests/e2e`, Pixel 7 + iPad portrait + iPad landscape) |
+| Test from paper | pdf.js (`pdfjs-dist` legacy build) and tesseract.js, both lazy and **not** precached: `assets/paper/**` and `ocr/**` are cached on first use (Cache Storage `kagaku-paper-tools-v1`, see `src/paper/tools.ts` and `vite.config.ts`) |
 | Deploy | GitHub Actions → GitHub Pages, only from `main`, only when every check passes (`.github/workflows/ci.yml`) |
 
 ## Folders
@@ -24,9 +25,11 @@ src/
              AI prompt (prompt.ts), demo pack
   db/        Dexie schema, settings, live queries, backup/restore
   engine/    pure logic: marking, practice variants, generators, sessions, CBT, progress, verify
+  paper/     "Test from paper": answer-key parser, question finding, matching (pure, unit-tested),
+             pixel work + image worker, pdf.js/OCR loaders, the resumable job, paper store
   ui/        shared components: kit (buttons, sheets, tabs), content (rich text, images),
              answer inputs for every format, Verify sheet, shell/nav
-  pages/     one file per screen
+  pages/     one file per screen (pages/paper/: upload, check & start, crop editor)
   styles/    tokens.css (theme variables, dark default + light) and app.css
 tools/
   process/   Python: crop questions from digital PDFs, clean phone photos (Claude's side)
@@ -41,7 +44,8 @@ docs/        handover, this file, content format, workflow, checklist, pack JSON
 Two kinds of data, kept apart on purpose:
 
 - **Content** — `questions`, `remember`, `passages`, `papers`, `chapters`, `media`, `packs`. Always comes from packs, so it can be re-installed and is **not** in backups. Every row carries `packId`. Images live once in `media`, keyed by SHA-256, with the list of packs using them.
-- **Progress** — `attempts`, `galti`, `bookmarks`, `notes`, `qmeta`, `tests`, `days`, `settings`. Exists only on the device; `src/db/backup.ts` exports it (plus his own photo questions, `packId: 'user'`) to one JSON file. Tokens/keys are never exported.
+- **Progress** — `attempts`, `galti`, `bookmarks`, `notes`, `qmeta`, `tests`, `days`, `settings`. Exists only on the device; `src/db/backup.ts` exports it (plus his own photo questions, `packId: 'user'`, and the paper crops that Galti entries show) to one JSON file. Tokens/keys are never exported.
+- **His own papers** (Dexie v2) — `userPapers` (one row per paper: pages with their text, sections, questions with their boxes and keys, the parsed key) and `paperFiles` (raw uploads, deleted once the pages are made). Page images and question crops are in `media` tagged `paper:<id>`. Not in backups (too big); "Delete paper images" frees them and keeps results.
 
 Ids:
 - Question ids come from the pack, or are derived from a hash of the question's content without the answer (`q_<16 hex>`), so the same question from two sources dedupes and a corrected key replaces the old one.
@@ -58,6 +62,7 @@ Chapters: `src/content/syllabus.ts` is the built-in registry; packs may add or o
 - **To Remember practice is adaptive** (`engine/generate.ts`, `engine/adaptive.ts`, `engine/similar.ts`): `buildSlots` puts *facts* (a table row, a whole trend) into the session; each becomes a question only when reached, at the current level. Levels: 1 Warm-up (random wrong options), 2 Tricky (look-alike options ranked by `similarity`/`confusion`, "which of these" multiple correct, short orderings), 3 JA mode (statements / correctly-matched pairs / comparisons multiple correct, two-step "hop" recall, correct-order MCQ), 4 Boss (typed numbers, 5-row match with a spare option). 2 right in a row → level up, 2 wrong/skipped → level down, partly right holds; the level is saved per chapter set in the `practiceLevels` setting. A missed fact returns 3–5 questions later in another form (max twice; only the rows he got wrong). Every generated question carries a `solution` built from the source row/trend, and the feedback shows the correct answer in words (`answerInWords`) plus that explanation. Columns whose value is printed in the key (charge of `\ce{SO4^2-}`) are never asked.
 - **CBT** (`engine/cbt.ts` → `pages/Cbt.tsx`): NTA semantics — an answer counts only after Save & Next / Save & Mark; palette states not visited / not answered / answered / marked / answered+marked; timer saved every 5 s and paused while the app is closed; `submitTest` logs attempts so wrong answers reach Galti; `evaluate` gives section/chapter/question breakdowns.
 - **Marking** (`engine/marking.ts`): per-test schemes; JA multiple-correct partial marking = +1 per correct option chosen when no wrong option is chosen.
+- **Test from paper** (`src/paper/`, details in `docs/PAPER_TEST.md`): upload (`pages/paper/PaperNew.tsx`) → `paper/job.ts` (resumable: `pages` → `read` (OCR only when a page has no text) → `detect`) → `layout.detectQuestions` + `answerKey.parseAnswerKey` + `match.buildPaper` → crops cut in `paper.worker.ts` → "Check & start" (`pages/paper/PaperCheck.tsx`) → `store.startPaperTest` → normal CBT. Questions are `p:<paperId>:<uid>` snapshots (never in `db.questions`, so practice, counts, Search and Review don't see them), single/multiple with bare option ids (`A`–`D` or `1`–`4`), chapter `<subject>.from-papers` (hidden `PAPER_CHAPTERS`) until he picks one on the result sheet. Galti keeps their snapshot. `Question.accept` ("A or C") and `Question.bonus` (full marks to all) exist for these keys. **Keep only one pdf.js document open at a time** (pdf.js 5 keeps the page count in a global).
 - **Verify** (`engine/verify.ts`, `ui/VerifySheet.tsx`): Web Share to the Claude app (image + ready prompt), Google search, optional Gemini (`x-goog-api-key`, model name is a setting); outcomes: confirmed / fixed / doubtful.
 
 ## Checks before every deploy
@@ -76,4 +81,5 @@ Inside a Claude cloud container Playwright 1.56.1 matches the pre-installed Chro
 
 - **A question format**: add it to `FORMATS` and `zQuestion` in `schema.ts`, checking in `importer.checkQuestion`, `check`/`describeAnswer` in `marking.ts`, an input in `ui/answer.tsx`, `responseToAnswer` in `verify.ts`, the prompt in `prompt.ts`, docs, and tests.
 - **A screen**: a file in `src/pages`, a route in `App.tsx`, an e2e check for no sideways scroll.
-- **Database change**: add `this.version(2).stores(...)` in `db.ts` (never edit version 1) with an `upgrade` if rows need rewriting.
+- **Database change**: add `this.version(3).stores(...)` in `db.ts` (never edit earlier versions; v2 added `userPapers`, `paperFiles`) with an `upgrade` if rows need rewriting.
+- **A paper layout the reader misses**: add a unit test with its lines to `src/paper/layout.test.ts` (or a key format to `answerKey.test.ts`) first. `work/harness/run.mts`-style scripts (git-ignored `work/`) can run a real PDF through the same code in Node with `pdfjs-dist`; real papers never go into the repo.

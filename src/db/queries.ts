@@ -2,11 +2,19 @@
 
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from './db'
-import { BASE_CHAPTERS, mergeChapters, type Chapter, type SubjectId } from '../content/syllabus'
+import { BASE_CHAPTERS, PAPER_CHAPTERS, mergeChapters, type Chapter, type SubjectId } from '../content/syllabus'
 import { currentStreak, localDate } from '../engine/progress'
 
+const ALL_BASE = [...BASE_CHAPTERS, ...PAPER_CHAPTERS]
+
+/** Every chapter, including the hidden "From papers" buckets (filter `hidden` for lists). */
 export function useChapters(): Chapter[] {
-  return useLiveQuery(async () => mergeChapters(BASE_CHAPTERS, await db.chapters.toArray()), [], BASE_CHAPTERS)
+  return useLiveQuery(async () => mergeChapters(ALL_BASE, await db.chapters.toArray()), [], ALL_BASE)
+}
+
+/** Chapters to list and pick from. */
+export function useVisibleChapters(): Chapter[] {
+  return useChapters().filter((c) => !c.hidden)
 }
 
 export function useChapter(id: string | undefined): Chapter | undefined {
@@ -40,7 +48,7 @@ export function useChapterStats(): Map<string, ChapterStat> | undefined {
     for (const c of rChapters) get(String(c)).remember++
     const done = new Map<string, Set<string>>()
     for (const a of attempts) {
-      if (a.qid.startsWith('g:')) continue
+      if (a.qid.startsWith('g:') || a.qid.startsWith('p:')) continue
       if (!done.has(a.chapter)) done.set(a.chapter, new Set())
       done.get(a.chapter)!.add(a.qid)
     }
@@ -54,7 +62,7 @@ export function subjectTotals(stats: Map<string, ChapterStat> | undefined, chapt
   let total = 0
   let done = 0
   for (const c of chapters) {
-    if (c.subject !== subject) continue
+    if (c.subject !== subject || c.hidden) continue
     const s = stats?.get(c.id)
     total += s?.total ?? 0
     done += s?.done ?? 0

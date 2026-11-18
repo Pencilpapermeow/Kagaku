@@ -33,6 +33,19 @@ Features need a paid, capable AI; content can keep coming after 10 Nov through t
 - [x] After a wrong/skipped answer: correct answer in words + explanation from the source row/trend; the missed fact comes back 3–5 questions later in another form
 - [x] Fixed a crash on newer Chrome: `window.scrollTo` now returns a Promise, which an effect must not return (App, Review, Settings)
 
+## Done (18 Nov)
+
+- [x] **Test from paper**: question paper + answer key PDFs → offline NTA-style CBT (details: `docs/PAPER_TEST.md`)
+  - [x] Upload screen (paper + key zones, key-inside-paper suggestion), PDF reader downloaded once then offline
+  - [x] Question finding ported from `pdf_questions.py`: 1/2 columns, questions running into the next column/page, headers/page numbers, cover instructions skipped
+  - [x] Sections, types and marks from headings/instructions (Mains AITS and JA style), duration, title
+  - [x] Answer-key parser for every listed format, grids, subject columns, Paper 1/Paper 2 keys; 120 unit tests in `src/paper/`
+  - [x] Check & start: doubts only, one-tap start; crop editor (edges, draw, split, join), add missed question, key/type/marks/sections/title/time
+  - [x] JA Paper 1 + Paper 2 in one PDF → two papers; key with both papers → right answers per paper
+  - [x] My papers (re-attempt, size, delete images), chapter picking on the result sheet, Galti crops in backups
+  - [x] Tried on his real AITS-04 Mains PDFs: 75/75 questions, 75/75 keys, nothing doubtful (files never committed)
+  - [x] Photos work as a secondary path (OCR downloaded only when needed) — he said he won't use photos
+
 ## Waiting on Uttam
 
 - [ ] Install the Claude GitHub App on both repos (push to `Kagaku` was refused on 21 Oct)
@@ -44,6 +57,9 @@ Features need a paid, capable AI; content can keep coming after 10 Nov through t
 - [ ] Experiments (JA "General" physics): own chapter or inside Units and Measurement?
 
 ## Still to build
+
+- [ ] Try "Test from paper" on a real JA-style (Paper 1 / Paper 2) AITS PDF and its key when he sends one
+- [ ] Old JA matrix-match (several answers per row) keys can't be read yet — they show as doubts
 
 - [ ] MathLive keyboard for editing formulas/answers in the app (no LaTeX typing)
 - [ ] Stylus drawing pad on iPad → AI converts to LaTeX

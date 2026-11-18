@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ChevronRight, NotebookPen } from 'lucide-react'
 import { SUBJECTS, getSubject, type SubjectId } from '../content/syllabus'
-import { useChapterStats, useChapters } from '../db/queries'
+import { useChapterStats, useVisibleChapters } from '../db/queries'
 import { Bar, Chip, Tabs, TopBar } from '../ui/kit'
 import { SUBJECT_COLOR } from './Home'
 
@@ -14,7 +14,7 @@ export function SubjectPage() {
   const unit = params.get('unit') ?? ''
   const cls = params.get('class') ?? ''
   const nav = useNavigate()
-  const chapters = useChapters()
+  const chapters = useVisibleChapters()
   const stats = useChapterStats()
 
   const list = useMemo(

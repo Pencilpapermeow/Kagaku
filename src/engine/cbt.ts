@@ -4,6 +4,7 @@ import { db, type TestRow, type TestSection, type TestResponse } from '../db/db'
 import type { MarkingScheme, Question } from '../content/schema'
 import { check, isEmpty, maxMarks, ruleFor, score, type Response, type Verdict } from './marking'
 import { isGeneratedId } from './generate'
+import { isPaperId } from '../paper/types'
 import { recordAttempt } from './progress'
 import { questionsByIds, withFix } from './session'
 
@@ -34,10 +35,11 @@ export async function createTest(opts: {
   durationMin: number
   sections: { name: string; questions: Question[]; scheme: MarkingScheme }[]
   paperId?: string
+  userPaperId?: string
 }): Promise<TestRow> {
   const snapshots: Record<string, Question> = {}
   const sections: TestSection[] = opts.sections.map((s) => {
-    for (const q of s.questions) if (isGeneratedId(q.id) || !q.id) snapshots[q.id] = q
+    for (const q of s.questions) if (isGeneratedId(q.id) || isPaperId(q.id) || !q.id) snapshots[q.id] = q
     return { name: s.name, qids: s.questions.map((q) => q.id), scheme: s.scheme }
   })
   const row: TestRow = {
@@ -45,6 +47,7 @@ export async function createTest(opts: {
     title: opts.title,
     kind: opts.kind,
     paperId: opts.paperId,
+    userPaperId: opts.userPaperId,
     createdAt: Date.now(),
     durationSec: Math.round(opts.durationMin * 60),
     sections,
@@ -109,7 +112,7 @@ export function evaluate(t: TestRow, questions: Map<string, Question>): TestResu
         chapter: q.chapter,
         format: q.format,
         verdict,
-        marks: score(ruleFor(s.scheme, q.format), verdict),
+        marks: q.bonus ? maxMarks(s.scheme, q.format) : score(ruleFor(s.scheme, q.format), verdict),
         max: maxMarks(s.scheme, q.format),
         timeMs: r?.timeMs ?? 0,
       })
@@ -121,7 +124,7 @@ export function evaluate(t: TestRow, questions: Map<string, Question>): TestResu
       const g = m.get(key(x)) ?? { marks: 0, max: 0, correct: 0, wrong: 0, unattempted: 0 }
       g.marks += x.marks
       g.max += x.max
-      if (!x.verdict.attempted) g.unattempted++
+      if (!x.verdict.attempted && !x.verdict.correct) g.unattempted++
       else if (x.verdict.correct) g.correct++
       else g.wrong++
       m.set(key(x), g)
@@ -135,7 +138,7 @@ export function evaluate(t: TestRow, questions: Map<string, Question>): TestResu
     correct: count((x) => x.verdict.correct),
     wrong: count((x) => x.verdict.attempted && !x.verdict.correct),
     partial: count((x) => x.verdict.partial),
-    unattempted: count((x) => !x.verdict.attempted),
+    unattempted: count((x) => !x.verdict.attempted && !x.verdict.correct),
     timeMs: perQuestion.reduce((a, x) => a + x.timeMs, 0),
     perQuestion,
     bySection: [...group((x) => x.section).entries()].map(([name, g]) => ({ name, ...g })),
@@ -154,7 +157,7 @@ export async function submitTest(id: string): Promise<void> {
     for (const qid of s.qids) {
       const q = questions.get(qid)
       const r = t.responses[qid]
-      if (!q || isEmpty(r?.answer as Response | undefined)) continue
+      if (!q || q.bonus || isEmpty(r?.answer as Response | undefined)) continue
       await recordAttempt({ q, qid, verdict: check(q, r!.answer as Response), response: r!.answer as Response, mode: 'test', timeMs: r!.timeMs, at: now })
     }
 }

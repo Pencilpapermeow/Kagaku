@@ -5,16 +5,17 @@ import { useNavigate } from 'react-router-dom'
 import { Check } from 'lucide-react'
 import { SUBJECTS, getSubject, type SubjectId } from '../content/syllabus'
 import { FORMATS, FORMAT_LABEL, type MarkingScheme, type QuestionFormat } from '../content/schema'
-import { useChapterStats, useChapters } from '../db/queries'
+import { useChapterStats, useVisibleChapters } from '../db/queries'
 import { createTest } from '../engine/cbt'
 import { SCHEME_PRESETS } from '../engine/marking'
 import { pickTestQuestions } from '../engine/session'
 import { randomSeed } from '../engine/rng'
 import { Button, Chip, Field, TopBar, cx, toast } from '../ui/kit'
+import { SchemeTable } from '../ui/SchemeTable'
 
 export function TestBuilderPage() {
   const nav = useNavigate()
-  const chapters = useChapters()
+  const chapters = useVisibleChapters()
   const stats = useChapterStats()
   const [step, setStep] = useState(1)
   const [subjects, setSubjects] = useState<SubjectId[]>([])
@@ -42,9 +43,6 @@ export function TestBuilderPage() {
     const t = await createTest({ title: `Custom test · ${qs.length} Qs`, kind: 'custom', durationMin: minutes, sections })
     nav(`/test/${t.id}`, { replace: true })
   }
-
-  const setRule = (f: QuestionFormat, k: 'correct' | 'wrong', v: number) =>
-    setScheme((s) => ({ ...s, id: undefined, name: 'Custom', rules: { ...s.rules, [f]: { ...(s.rules[f] ?? { correct: 4, wrong: 0, unattempted: 0, partial: false }), [k]: v } } }))
 
   return (
     <div>
@@ -165,33 +163,13 @@ export function TestBuilderPage() {
               </Chip>
             ))}
           </div>
-          <div className="table-wrap">
-            <table className="rtable scheme-table">
-              <thead>
-                <tr>
-                  <th>Format</th>
-                  <th>Correct</th>
-                  <th>Wrong</th>
-                </tr>
-              </thead>
-              <tbody>
-                {FORMATS.map((f) => (
-                  <tr key={f}>
-                    <td>
-                      {FORMAT_LABEL[f]}
-                      {scheme.rules[f]?.partial && <span className="muted small"> (partial)</span>}
-                    </td>
-                    <td>
-                      <input type="number" value={scheme.rules[f]?.correct ?? 0} onChange={(e) => (setSchemeId(''), setRule(f, 'correct', Number(e.target.value)))} />
-                    </td>
-                    <td>
-                      <input type="number" value={scheme.rules[f]?.wrong ?? 0} onChange={(e) => (setSchemeId(''), setRule(f, 'wrong', Number(e.target.value)))} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <SchemeTable
+            rows={FORMATS.map((f) => ({ key: f, label: FORMAT_LABEL[f], rule: scheme.rules[f] ?? { correct: 0, wrong: 0, unattempted: 0, partial: false } }))}
+            onChange={(f, patch) => {
+              setSchemeId('')
+              setScheme((s) => ({ ...s, id: undefined, name: 'Custom', rules: { ...s.rules, [f]: { ...(s.rules[f as QuestionFormat] ?? { correct: 4, wrong: 0, unattempted: 0, partial: false }), ...patch } } }))
+            }}
+          />
           <div className="builder-foot">
             <Button variant="ghost" onClick={() => setStep(2)}>
               Back

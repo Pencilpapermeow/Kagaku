@@ -39,7 +39,7 @@ export function SearchPage() {
 
   const words = q.split(/\s+/).filter(Boolean)
   const match = (t: string) => words.every((w) => t.includes(w))
-  const chapterHits = words.length ? chapters.filter((c) => match(c.name.toLowerCase())) : []
+  const chapterHits = words.length ? chapters.filter((c) => !c.hidden && match(c.name.toLowerCase())) : []
   const remHits = words.length && index ? index.rem.filter((x) => match(x.text)).slice(0, 40) : []
   const qHits = words.length && index ? index.qs.filter((x) => match(x.text)).slice(0, 40) : []
 
