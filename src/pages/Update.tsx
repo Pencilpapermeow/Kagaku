@@ -192,7 +192,7 @@ export function UpdatePage() {
                 <div>
                   <b>{p.title}</b>
                   <p className="muted small">
-                    {p.counts.questions} questions · {p.counts.remember} to remember · {p.counts.media} images · {formatBytes(p.bytes)} · {p.via}
+                    {p.counts.questions} questions · {p.counts.remember} to remember · {p.counts.media} images · {formatBytes(p.bytes)} · {p.via === 'sync' ? 'from your other device' : p.via}
                   </p>
                 </div>
                 <button

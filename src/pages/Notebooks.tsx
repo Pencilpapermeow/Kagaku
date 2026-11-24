@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Bookmark, CircleHelp, GraduationCap, ImagePlus, NotebookPen, Play, RotateCw, StickyNote, Sun, Trash2 } from 'lucide-react'
+import { Bookmark, ChevronRight, CircleHelp, GraduationCap, ImagePlus, NotebookPen, PenLine, Play, RotateCw, StickyNote, Sun, Trash2 } from 'lucide-react'
 import { db, GALTI_REASONS, GALTI_REASON_LABEL, type GaltiReason, type GaltiRow, type QuestionRow } from '../db/db'
 import { useChapters } from '../db/queries'
 import { useSettings } from '../db/settings'
@@ -277,15 +277,42 @@ function AllNotes() {
   const chapters = useChapters()
   const name = useMemo(() => new Map(chapters.map((c) => [c.id, c.name])), [chapters])
   const notes = useLiveQuery(() => db.notes.orderBy('at').reverse().toArray(), [])
-  if (!notes) return null
-  if (!notes.length)
+  // Handwritten cards: how many per chapter (the cards themselves open in the chapter).
+  const ink = useLiveQuery(async () => {
+    const m = new Map<string, { n: number; last: number }>()
+    await db.ink.each((r) => {
+      const c = m.get(r.chapter) ?? { n: 0, last: 0 }
+      m.set(r.chapter, { n: c.n + 1, last: Math.max(c.last, r.updatedAt) })
+    })
+    return [...m.entries()].sort((a, b) => b[1].last - a[1].last)
+  }, [])
+  if (!notes || !ink) return null
+  if (!notes.length && !ink.length)
     return (
       <Empty icon={<StickyNote />} title="No notes yet">
-        Add notes from any chapter's Notes tab.
+        Add notes from any chapter's Notes tab — typed, or handwritten point cards.
       </Empty>
     )
   return (
     <div className="notes">
+      {!!ink.length && (
+        <>
+          <h3 className="section-title small">Handwritten points</h3>
+          <div className="card list-card">
+            {ink.map(([chapter, { n }]) => (
+              <Link key={chapter} to={`/c/${encodeURIComponent(chapter)}?tab=notes`} className="list-row">
+                <PenLine size={18} />
+                <span className="grow">{name.get(chapter) ?? chapter}</span>
+                <span className="muted small">
+                  {n} card{n === 1 ? '' : 's'}
+                </span>
+                <ChevronRight size={18} />
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
+      {!!notes.length && <h3 className="section-title small">Typed notes</h3>}
       {notes.map((n) => (
         <div key={n.id} className="card note">
           <Link to={`/c/${n.chapter}?tab=notes`} className="muted small">

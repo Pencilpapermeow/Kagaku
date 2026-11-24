@@ -7,6 +7,7 @@ import Dexie, { type EntityTable } from 'dexie'
 import type { Passage, Paper, Question, Remember, MarkingScheme } from '../content/schema'
 import type { Chapter } from '../content/syllabus'
 import type { PaperFileRow, UserPaperRow } from '../paper/types'
+import type { InkNoteRow } from '../ink/types'
 
 export type Stored<T> = T & { packId: string }
 
@@ -29,7 +30,8 @@ export interface PackRow {
   title: string
   createdAt: string
   importedAt: number
-  via: 'file' | 'paste' | 'repo' | 'user'
+  /** 'sync': arrived from his other device through device sync. */
+  via: 'file' | 'paste' | 'repo' | 'user' | 'sync'
   sha256?: string
   bytes: number
   chapters: string[]
@@ -85,9 +87,33 @@ export interface BookmarkRow {
 
 export interface NoteRow {
   id?: number
+  /** Same on every device (device sync); the numeric id is only local. */
+  uid?: string
   chapter: string
   qid?: string
   text: string
+  at: number
+}
+
+export function newNoteUid(): string {
+  return `n${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`
+}
+
+/** Device sync: what each synced item looked like when both sides last agreed. */
+export interface SyncBaseRow {
+  /** "<kind>/<id>", e.g. "ink/ink1abc", "paper/up1x2y". */
+  key: string
+  /** Fingerprint of the item on this device at that moment. */
+  local: string
+  /** Git blob sha (or media-set fingerprint) of the item in the repo at that moment. */
+  remote: string
+}
+
+/** The original file of a pack he added by paste or file, so device sync can send it on. */
+export interface PackSourceRow {
+  id: string
+  blob: Blob
+  bytes: number
   at: number
 }
 
@@ -165,6 +191,9 @@ export class KagakuDB extends Dexie {
   settings!: EntityTable<SettingRow, 'key'>
   userPapers!: EntityTable<UserPaperRow, 'id'>
   paperFiles!: EntityTable<PaperFileRow, 'id'>
+  ink!: EntityTable<InkNoteRow, 'id'>
+  syncBase!: EntityTable<SyncBaseRow, 'key'>
+  packSources!: EntityTable<PackSourceRow, 'id'>
 
   constructor(name = 'kagaku') {
     super(name)
@@ -191,11 +220,28 @@ export class KagakuDB extends Dexie {
       userPapers: 'id, createdAt, status',
       paperFiles: '++id, paperId',
     })
+    // v3: handwritten point cards, and device sync (typed notes get an id that is the
+    // same on every device; syncBase remembers the last agreed state of each item).
+    this.version(3)
+      .stores({
+        notes: '++id, chapter, qid, at, uid',
+        ink: 'id, chapter, updatedAt',
+        syncBase: 'key',
+        packSources: 'id',
+      })
+      .upgrade((tx) =>
+        tx
+          .table('notes')
+          .toCollection()
+          .modify((n: NoteRow) => {
+            n.uid ??= newNoteUid()
+          }),
+      )
   }
 }
 
 export const CONTENT_TABLES = ['questions', 'remember', 'passages', 'papers', 'chapters', 'media', 'packs'] as const
-export const PROGRESS_TABLES = ['attempts', 'galti', 'bookmarks', 'notes', 'qmeta', 'tests', 'days', 'settings'] as const
+export const PROGRESS_TABLES = ['attempts', 'galti', 'bookmarks', 'notes', 'ink', 'qmeta', 'tests', 'days', 'settings'] as const
 
 export let db = new KagakuDB()
 

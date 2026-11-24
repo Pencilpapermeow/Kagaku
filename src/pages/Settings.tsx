@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Download, KeyRound, Moon, PackagePlus, Save, Sun, Upload } from 'lucide-react'
+import { Download, KeyRound, Moon, PackagePlus, RefreshCw, Save, Sun, Upload } from 'lucide-react'
 import { setSetting, useSettings, type Settings } from '../db/settings'
 import { downloadBackup, restoreBackup } from '../db/backup'
 import { fetchIndex } from '../content/sync'
 import { Button, Field, TopBar, toast } from '../ui/kit'
 import { InstallHelp } from '../ui/install'
+import { lastSyncAt, syncNow, useSyncStatus } from '../sync/status'
 
 function useDraft<K extends keyof Settings>(key: K) {
   const settings = useSettings()
@@ -125,7 +126,10 @@ export function SettingsPage() {
         <h2 className="card-title">
           <KeyRound size={18} /> Content repo (GitHub)
         </h2>
-        <p className="muted small">A read-only token for the private kagaku-content repo. It stays on this device and is never put in backups.</p>
+        <p className="muted small">
+          A token for the private kagaku-content repo. Reading is enough for packs; sync between devices also needs it to write. It stays on this device and is never put in
+          backups.
+        </p>
         <div className="form-grid">
           <Field label="Repository">
             <input value={repo} onChange={(e) => setRepo(e.target.value.trim())} onBlur={saveRepo} />
@@ -156,6 +160,8 @@ export function SettingsPage() {
         </div>
       </section>
 
+      <SyncCard />
+
       <section className="card">
         <h2 className="card-title">
           <KeyRound size={18} /> Gemini (optional)
@@ -175,5 +181,68 @@ export function SettingsPage() {
         Kagaku {__APP_VERSION__} · made for Uttam's JA 2027
       </p>
     </div>
+  )
+}
+
+function ago(t: number): string {
+  const s = Math.round((Date.now() - t) / 1000)
+  if (s < 60) return 'just now'
+  if (s < 3600) return `${Math.round(s / 60)} min ago`
+  if (s < 86400) return `${Math.round(s / 3600)} h ago`
+  return new Date(t).toLocaleString()
+}
+
+function SyncCard() {
+  const s = useSettings()
+  const st = useSyncStatus()
+  const [last, setLast] = useState<number>()
+  // Shown at once; the saved setting catches up a moment later.
+  const [on, setOn] = useState<boolean>()
+  useEffect(() => {
+    void lastSyncAt().then(setLast)
+  }, [st.lastAt])
+  const r = st.report
+  const run = async () => {
+    try {
+      const rep = await syncNow()
+      if (rep) toast(rep.pulled + rep.pushed + rep.removedHere + rep.removedThere ? `Synced: ${rep.pulled} arrived, ${rep.pushed} sent` : 'Already in sync')
+    } catch (e) {
+      toast((e as Error).message)
+    }
+  }
+  return (
+    <section className="card" id="sync">
+      <h2 className="card-title">
+        <RefreshCw size={18} /> Sync between devices
+      </h2>
+      <p className="muted small">
+        Handwritten points, typed notes, papers from "Test from paper" (with their pictures) and packs you added by paste or file go to your private repo and appear
+        on your other devices. Practice, Galti and test results still stay on each device.
+      </p>
+      <label className="check-row">
+        <input
+          type="checkbox"
+          checked={on ?? s.syncEnabled}
+          disabled={!s.githubToken}
+          onChange={async (e) => {
+            const v = e.target.checked
+            setOn(v)
+            await setSetting('syncEnabled', v)
+            if (v) void run()
+          }}
+        />
+        <span>Sync this device automatically</span>
+      </label>
+      {!s.githubToken && <p className="warn-text small">Add the token in "Content repo" above first.</p>}
+      <p className="muted small" data-testid="sync-status">
+        {st.running ? 'Syncing…' : last ? `Last synced ${ago(last)}` : 'Not synced yet'}
+        {r && !st.running && r.pulled + r.pushed > 0 ? ` · ${r.pulled} arrived, ${r.pushed} sent` : ''}
+        {r?.copies ? ` · ${r.copies} card(s) changed on both devices were kept twice` : ''}
+      </p>
+      {st.error && <p className="warn-text small">{st.error}</p>}
+      <Button icon={<RefreshCw size={18} />} disabled={!s.githubToken || st.running} onClick={run}>
+        Sync now
+      </Button>
+    </section>
   )
 }

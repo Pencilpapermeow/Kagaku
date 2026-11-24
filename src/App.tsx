@@ -18,7 +18,24 @@ import { useSettings } from './db/settings'
 
 // "Test from paper" loads only when used (pdf.js and OCR come with it, lazily).
 const PaperNewPage = lazy(() => import('./pages/paper/PaperNew').then((m) => ({ default: m.PaperNewPage })))
+const InkEditorPage = lazy(() => import('./pages/InkEditor').then((m) => ({ default: m.InkEditorPage })))
 const PaperCheckPage = lazy(() => import('./pages/paper/PaperCheck').then((m) => ({ default: m.PaperCheckPage })))
+
+/** Device sync in the background: on start, on coming back to the screen, after changes. */
+function AutoSync() {
+  useEffect(() => {
+    let stop: (() => void) | undefined
+    let gone = false
+    void import('./sync/engine').then((m) => {
+      if (!gone) stop = m.startAutoSync()
+    })
+    return () => {
+      gone = true
+      stop?.()
+    }
+  }, [])
+  return null
+}
 
 function ThemeSync() {
   const { theme } = useSettings()
@@ -61,12 +78,21 @@ export function App() {
   return (
     <HashRouter>
       <ThemeSync />
+      <AutoSync />
       <ScrollTop />
       <Toasts />
       <Routes>
         {/* Full-screen moods: practice and the CBT test hide the navigation. */}
         <Route path="/practice" element={<PracticePage />} />
         <Route path="/test/:id" element={<CbtPage />} />
+        <Route
+          path="/ink/:id"
+          element={
+            <Suspense fallback={null}>
+              <InkEditorPage />
+            </Suspense>
+          }
+        />
         <Route element={<Shell />}>
           <Route index element={<HomePage />} />
           <Route path="/s/:subject" element={<SubjectPage />} />

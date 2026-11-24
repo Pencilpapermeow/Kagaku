@@ -1,8 +1,8 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { BookOpen, Brain, EyeOff, Eye, ListChecks, NotebookPen, Play, Sparkles, StickyNote, Trash2 } from 'lucide-react'
-import { db, type RememberRow } from '../db/db'
+import { BookOpen, Brain, EyeOff, Eye, ListChecks, NotebookPen, PenLine, Play, Sparkles, StickyNote, Trash2 } from 'lucide-react'
+import { db, newNoteUid, type RememberRow } from '../db/db'
 import { useChapter, useChapterStats } from '../db/queries'
 import { getSubject } from '../content/syllabus'
 import { FORMAT_LABEL, type QuestionFormat } from '../content/schema'
@@ -14,6 +14,8 @@ import { Button, Chip, Empty, Tabs, TopBar, cx, toast } from '../ui/kit'
 import { MathBlock, MediaImage, Rich } from '../ui/content'
 import { SUBJECT_COLOR } from './Home'
 import { GaltiList } from './Notebooks'
+import { chapterInk, createInkNote } from '../ink/store'
+import { InkCard } from '../ink/InkCard'
 
 type Tab = 'remember' | 'practice' | 'galti' | 'notes'
 
@@ -23,6 +25,7 @@ export function ChapterPage() {
   const [params, setParams] = useSearchParams()
   const tab = (params.get('tab') as Tab) || 'remember'
   const stats = useChapterStats()?.get(cid)
+  const notesCount = useLiveQuery(async () => (await db.notes.where('chapter').equals(cid).count()) + (await db.ink.where('chapter').equals(cid).count()), [cid])
   if (!ch) return <TopBar title="Chapter not found" />
   const unit = getSubject(ch.subject).units.find((u) => u.id === ch.unit)?.name
 
@@ -36,7 +39,7 @@ export function ChapterPage() {
           { id: 'remember', label: 'To Remember', badge: stats?.remember },
           { id: 'practice', label: 'Practice', badge: stats?.total },
           { id: 'galti', label: 'Galti', badge: stats?.galti },
-          { id: 'notes', label: 'Notes' },
+          { id: 'notes', label: 'Notes', badge: notesCount },
         ]}
       />
       {tab === 'remember' && <RememberTab chapter={cid} />}
@@ -259,16 +262,48 @@ function PracticeTab({ chapter }: { chapter: string }) {
 }
 
 function NotesTab({ chapter }: { chapter: string }) {
+  const nav = useNavigate()
   const notes = useLiveQuery(() => db.notes.where('chapter').equals(chapter).reverse().sortBy('at'), [chapter])
+  const ink = useLiveQuery(() => chapterInk(chapter), [chapter])
   const [text, setText] = useState('')
+  const [hide, setHide] = useState(false)
   const add = async () => {
     if (!text.trim()) return
-    await db.notes.add({ chapter, text: text.trim(), at: Date.now() })
+    await db.notes.add({ uid: newNoteUid(), chapter, text: text.trim(), at: Date.now() })
     setText('')
     toast('Note saved')
   }
+  const write = async () => nav(`/ink/${await createInkNote(chapter)}`)
   return (
     <div className="notes">
+      <section className="ink-section">
+        <div className="ink-head">
+          <h3 className="section-title small">Handwritten points{ink?.length ? ` · ${ink.length}` : ''}</h3>
+          <div className="row gap">
+            {!!ink?.length && (
+              <Button variant={hide ? 'primary' : 'soft'} size="sm" icon={hide ? <EyeOff size={16} /> : <Eye size={16} />} onClick={() => setHide(!hide)}>
+                {hide ? 'Self-test on' : 'Self-test'}
+              </Button>
+            )}
+            <Button variant="primary" size="sm" icon={<PenLine size={16} />} onClick={write}>
+              Write a point
+            </Button>
+          </div>
+        </div>
+        {ink && !ink.length && (
+          <button type="button" className="card ink-empty muted" onClick={write}>
+            <PenLine size={22} />
+            <div>Write points for this chapter by hand — one card per point. They work with a stylus or a finger.</div>
+          </button>
+        )}
+        <div className="ink-list">
+          {ink?.map((r, i) => (
+            <InkCard key={r.id} row={r} n={i + 1} hide={hide} />
+          ))}
+        </div>
+      </section>
+
+      <h3 className="section-title small">Typed notes</h3>
       <div className="card note-new">
         <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Write a note for this chapter… ($x^2$ works for maths)" rows={3} />
         <Button variant="primary" icon={<StickyNote size={18} />} onClick={add} disabled={!text.trim()}>

@@ -2,7 +2,7 @@
 // Nothing touches the database until commitPack(), so the Update Center can show a
 // full preview (counts, warnings, errors) and let him decide.
 
-import { unzipSync } from 'fflate'
+import { unzipSync, zipSync } from 'fflate'
 import { z } from 'zod'
 import { db, type MediaRow, type PackRow, type QuestionRow } from '../db/db'
 import { canonicalJson, sha256Hex } from './hash'
@@ -321,13 +321,28 @@ export async function preparePack(src: PackSource, opts: { knownChapters?: Chapt
   }
 }
 
-const CONTENT = () => [db.questions, db.remember, db.passages, db.papers, db.chapters, db.media, db.packs]
+const CONTENT = () => [db.questions, db.remember, db.passages, db.papers, db.chapters, db.media, db.packs, db.packSources]
+
+/** Packs he adds himself travel to his other device through device sync (not the demo). */
+export function isOwnPack(row: Pick<PackRow, 'id' | 'via'>): boolean {
+  return (row.via === 'paste' || row.via === 'file' || row.via === 'sync') && row.id !== 'demo'
+}
+
+/** A .kagaku zip of a pack's source (pack.json + its images), as device sync sends it. */
+export function packSourceZip(src: PackSource): Uint8Array {
+  const files: Record<string, [Uint8Array, { mtime: Date }]> = {}
+  const mtime = new Date('2026-01-01T00:00:00Z')
+  files['pack.json'] = [enc.encode(JSON.stringify(src.json)), { mtime }]
+  for (const name of Object.keys(src.files).sort()) files[name] = [src.files[name], { mtime }]
+  return zipSync(files, { level: 6 })
+}
 
 /** Removes a pack's content. Media shared with other packs stays. Progress is never touched. */
 export async function removePack(packId: string) {
   await db.transaction('rw', CONTENT(), async () => {
     await removePackRows(packId)
     await db.packs.delete(packId)
+    await db.packSources.delete(packId)
   })
 }
 
@@ -375,6 +390,10 @@ export async function commitPack(p: PreparedPack, via: PackRow['via']): Promise<
     await db.papers.bulkPut(p.papers.map((x) => ({ ...x, packId })))
     await db.chapters.bulkPut(p.chapters.map((x) => ({ ...x, packId })))
     await db.packs.put(row)
+    if (isOwnPack(row)) {
+      const zip = packSourceZip(p.source)
+      await db.packSources.put({ id: packId, blob: new Blob([zip as BlobPart], { type: 'application/zip' }), bytes: zip.byteLength, at: row.importedAt })
+    } else await db.packSources.delete(packId)
   })
   return row
 }

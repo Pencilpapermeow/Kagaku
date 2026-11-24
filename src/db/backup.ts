@@ -2,7 +2,7 @@
 // test history, settings, and his own added questions with their photos.
 // Content packs are not included; they can be re-installed from the repo or files.
 
-import { db, PROGRESS_TABLES, type MediaRow, type QuestionRow } from './db'
+import { db, newNoteUid, PROGRESS_TABLES, type MediaRow, type QuestionRow } from './db'
 import { setSetting } from './settings'
 
 export const BACKUP_FORMAT = 'kagaku-backup'
@@ -65,12 +65,19 @@ export async function restoreBackup(file: Blob): Promise<{ attempts: number; gal
   const data = JSON.parse(await file.text()) as BackupFile
   if (data.format !== BACKUP_FORMAT) throw new Error('This is not a Kagaku backup file.')
   const keep = await db.settings.bulkGet(['githubToken', 'geminiKey'])
-  await db.transaction('rw', [...PROGRESS_TABLES.map((t) => db.table(t)), db.questions, db.media], async () => {
+  await db.transaction('rw', [...PROGRESS_TABLES.map((t) => db.table(t)), db.questions, db.media, db.syncBase], async () => {
     for (const t of PROGRESS_TABLES) {
       await db.table(t).clear()
       await db.table(t).bulkPut(data.tables[t] ?? [])
     }
     for (const k of keep) if (k) await db.settings.put(k)
+    // Older backups have no handwritten cards or note ids.
+    await db.notes.toCollection().modify((n) => {
+      n.uid ??= newNoteUid()
+    })
+    // Device sync starts again from "nothing agreed yet": the next sync only adds what is
+    // missing on either side, so restoring an older backup can never delete items elsewhere.
+    await db.syncBase.clear()
     await db.questions.bulkPut(data.userQuestions ?? [])
     for (const { data: d, ...m } of data.userMedia ?? []) {
       const old = await db.media.get(m.hash)

@@ -46,7 +46,14 @@ Features need a paid, capable AI; content can keep coming after 10 Nov through t
   - [x] Tried on his real AITS-04 Mains PDFs: 75/75 questions, 75/75 keys, nothing doubtful (files never committed)
   - [x] Photos work as a secondary path (OCR downloaded only when needed) — he said he won't use photos
 
+## Done (24 Nov)
+
+- [x] **Handwritten point cards** per chapter (Notes tab → "Write a point"): full-screen pad for his capacitive stylus or a finger — pens (6 colours, 3 widths), highlighter, stroke eraser, undo/redo, ruled/squares/plain paper, title, card grows downwards, two-finger scroll, one-finger "hand" scroll, palm guard on/off with adjustable height; cards numbered with Self-test cover; Notebooks → Notes lists them per chapter; in backups
+- [x] **Device sync** through the `kagaku-sync` branch of the content repo: handwritten cards, typed notes, "Test from paper" papers with their pictures, packs added by paste/file; automatic + "Sync now"; edits never lost to deletes, cards changed on both devices kept twice
+
 ## Waiting on Uttam
+
+- [ ] Give the content-repo token **Contents: Read and write** (GitHub → Settings → Developer settings → Fine-grained tokens → the Kagaku token → Edit), then Settings → "Sync between devices" on the iPad and the phone
 
 - [ ] Install the Claude GitHub App on both repos (push to `Kagaku` was refused on 21 Oct)
 - [ ] Enable GitHub Pages: repo Settings → Pages → Source: **GitHub Actions**
@@ -70,4 +77,6 @@ Features need a paid, capable AI; content can keep coming after 10 Nov through t
 - [ ] Per-chapter download/remove of content from the repo; storage per subject
 - [ ] Nightly bug hunt (scheduled task) once v1 is live
 - [ ] Hindi user guide, Claude Project master prompt on his free plan, final ARCHITECTURE pass
-- [ ] Optional/undecided: Google Drive auto-sync via Apps Script, Anki export
+- [ ] Sync progress too (attempts, Galti, tests, bookmarks, days, his photo questions) — needs per-record merge rules (attempts append-only, Galti streaks, day counters)
+- [ ] Packs he added by paste/file **before 24 Nov** have no stored source: re-add once to sync them
+- [ ] Optional/undecided: Anki export

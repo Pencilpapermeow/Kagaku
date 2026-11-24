@@ -22,6 +22,15 @@ export interface Settings {
   installHintDismissed: boolean
   lastBackupAt: number
   installedAt: number
+  /** Handwriting pad: last pen colour and width he used. */
+  inkColor: string
+  inkWidth: number
+  /** Palm guard (a strip at the bottom where touches are ignored): auto = on for iPad-size screens. */
+  inkPalmGuard: 'auto' | 'on' | 'off'
+  /** Palm guard height as a fraction of the screen. */
+  inkPalmHeight: number
+  /** Device sync through the private repo (needs a token that can also write). */
+  syncEnabled: boolean
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -40,6 +49,11 @@ export const DEFAULT_SETTINGS: Settings = {
   installHintDismissed: false,
   lastBackupAt: 0,
   installedAt: 0,
+  inkColor: 'ink',
+  inkWidth: 4,
+  inkPalmGuard: 'auto',
+  inkPalmHeight: 0.3,
+  syncEnabled: false,
 }
 
 export async function getSettings(): Promise<Settings> {
